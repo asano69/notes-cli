@@ -20,7 +20,7 @@ type Cmd interface {
 }
 
 // Version is version string of notes command. It conforms semantic versioning
-var Version = "1.6.2"
+var Version = "2.0.0"
 var description = `Simple note taking tool for command line with your favorite editor.
 
 You can manage (create/open/list) notes via this tool on terminal. notes also
@@ -73,6 +73,7 @@ func ParseCmd(args []string) (Cmd, error) {
 		&SaveCmd{Config: c},
 		&ConfigCmd{Config: c, Out: os.Stdout},
 		&SelfupdateCmd{Out: colorStdout},
+		&FixCmd{Config: c, Out: os.Stdout},
 	}
 
 	for _, cmd := range cmds {
