@@ -1,8 +1,5 @@
 A small CLI note taking tool with your favorite editor
 ======================================================
-[![CI][github-actions-badge]][github-actions]
-[![Coverage Report][codecov-badge]][codecov]
-[![Documentation][doc-badge]][doc]
 
 This is a small CLI tool for note taking in terminal with your favorite editor.
 You can manage (create/open/list) notes via this tool on terminal.
@@ -10,9 +7,6 @@ This tool also optionally can save your notes thanks to Git to avoid losing your
 
 This tool is intended to be used nicely with other commands such as `grep` (or [ag][], [rg][]),
 `rm`, filtering tools such as [fzf][] or [peco][] and editors which can be started from command line.
-
-![demo screencast](https://github.com/rhysd/ss/blob/master/notes-cli/demo.gif?raw=true)
-
 
 
 ## Table of Contents
@@ -27,19 +21,16 @@ This tool is intended to be used nicely with other commands such as `grep` (or [
 
 ## Installation
 
-Download an archive for your OS from [release page](https://github.com/rhysd/notes-cli/releases).
-It contains an executable. Please unzip the archive and put the executable in a directory in `$PATH`.
-
-Or you can install by building from source directly as follows. Go toolchain 1.16 or later is necessary.
+You can install by building from source directly as follows. Go toolchain 1.16 or later is necessary.
 
 ```
-$ go install github.com/rhysd/notes-cli/cmd/notes
+$ go install github.com/asano69/notes-cli/cmd/notes
 ```
 
 Before starting to use, you can try it with examples.
 
 ```sh
-$ git clone https://github.com/rhysd/notes-cli.git
+$ git clone https://github.com/asano69/notes-cli.git
 $ cd notes-cli/
 $ export NOTES_CLI_HOME="$(pwd)/example/notes-cli"
 $ export NOTES_CLI_EDITOR=vim # Set your favorite editor
@@ -84,7 +75,7 @@ Directories structure under notes-cli home is something like:
 ```
 
 where `<HOME>` is [XDG Data directory][xdg-dirs] (on macOS, `~/.local/share/notes-cli`) by default
-and can be specified by `$NOTES_CLI_HOME` environment variable. 
+and can be specified by `$NOTES_CLI_HOME` environment variable.
 
 You can see more practical example home directory at [example directory](./example/notes-cli).
 
@@ -132,24 +123,25 @@ created note file with it. You can seamlessly edit the file. (If it is not set, 
 referred.)
 
 ```markdown
-how-to-handle-files
-===================
-- Category: blog
-- Tags: golang, file
-- Created: 2018-10-28T07:19:27+09:00
-
+---
+category: blog
+tags: [golang, file]
+created: 2018-10-28T07:19:27
+---
+# how-to-handle-files
 ```
 
-Please do not remove `- Category: ...`, `- Tags: ...` and `- Created: ...` lines and title.
+Please do not remove `category: ...`, `tags: ...` and `created: ...` lines and title.
 They are used by `notes` command (modifying them is OK).
 Default title is file name. You can edit the title and body of note as follows:
 
 ```markdown
-How to handle files in Go
-=========================
-- Category: blog
-- Tags: golang, file
-- Created: 2018-10-28T07:19:27+09:00
+---
+category: blog
+tags: [golang, file]
+created: 2018-10-28T07:19:27
+---
+# how-to-handle-files
 
 Please read documentation.
 GoDoc explains everything.
@@ -299,8 +291,8 @@ For example, when `HOME/minutes/.template.md` is created with following content:
 ```markdown
 ---
 
-- Agenda: 
-- Attendee: 
+- Agenda:
+- Attendee:
 
 
 ```
@@ -317,8 +309,8 @@ weekly-meeting-2018-11-07
 
 ---
 
-- Agenda: 
-- Attendee: 
+- Agenda:
+- Attendee:
 ```
 
 Template file at category directory is prioritized. For example, when `notes new minutes weekly-meeting-2018-11-07`
