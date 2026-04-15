@@ -72,7 +72,6 @@ func ParseCmd(args []string) (Cmd, error) {
 		&TagsCmd{Config: c, Out: os.Stdout},
 		&SaveCmd{Config: c},
 		&ConfigCmd{Config: c, Out: os.Stdout},
-		&SelfupdateCmd{Out: colorStdout},
 		&FixCmd{Config: c, Out: os.Stdout},
 	}
 
