@@ -250,15 +250,32 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	}
 
 	// Parse frontmatter fields
+	inTagsList := false
 	for s.Scan() {
 		line := s.Text()
 		if line == "---" {
 			break
 		}
+
+		// Handle block-style tags (Obsidian format):
+		//   tags:
+		//     - foo
+		//     - bar
+		if inTagsList {
+			if trimmed := strings.TrimSpace(line); strings.HasPrefix(trimmed, "- ") {
+				if tag := strings.TrimSpace(trimmed[2:]); tag != "" {
+					note.Tags = append(note.Tags, tag)
+				}
+				continue
+			}
+			inTagsList = false
+		}
+
 		switch {
 		case strings.HasPrefix(line, "category: "):
 			note.Category = strings.TrimSpace(line[10:])
 		case strings.HasPrefix(line, "tags: "):
+			// Inline format: tags: [foo, bar]
 			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[6:]), "[]"))
 			note.Tags = make([]string, 0)
 			for _, t := range strings.Split(raw, ",") {
@@ -266,6 +283,10 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 					note.Tags = append(note.Tags, t)
 				}
 			}
+		case line == "tags:":
+			// Block format: tags followed by "- item" lines
+			note.Tags = make([]string, 0)
+			inTagsList = true
 		case strings.HasPrefix(line, "created: "):
 			raw := strings.TrimSpace(line[9:])
 			t, err := time.ParseInLocation("2006-01-02T15:04:05", raw, time.Local)
