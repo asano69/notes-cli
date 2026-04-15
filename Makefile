@@ -5,5 +5,8 @@ build:
 
 .PHONY: install
 install:
-	rm ~/go/bin/notes
-	cp notes ~/go/bin/notes
+	rm -f ~/go/bin/notes
+	rm -f ~/.local/bin/nn
+	cp notes ~/go/bin
+	cp nn.sh ~/.local/bin/nn
+
