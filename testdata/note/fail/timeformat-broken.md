@@ -1,8 +1,9 @@
-this is title
-=============
-- Category: fail
-- Tags: foo, bar
-- Created: 2018/10/30 11:37 (+09:00)
+---
+category: fail
+tags: [foo, bar]
+created: 2018/10/30 11:37 (+09:00)
+---
+# this is title
 
 this
 is

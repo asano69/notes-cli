@@ -6,24 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/mattn/go-runewidth"
 	"github.com/pkg/errors"
-)
-
-var (
-	reTitleBar = regexp.MustCompile("^=+$")
-	// Match to horizontal ruler of markdown: https://spec.commonmark.org/0.28/#thematic-break
-	// such as:
-	// ---
-	// ***
-	// ___
-	//   -	-   - -  -
-	reHorizontalRule = regexp.MustCompile(`^\s{0,3}(?:(?:-+\s*){3,}|(?:\*+\s*){3,}|(?:_+\s*){3,})$`)
-	closingComment   = []byte("-->\n")
 )
 
 // MismatchCategoryError represents an error caused when a user specifies mismatched category
@@ -102,29 +88,23 @@ func (note *Note) Create() error {
 
 	var b bytes.Buffer
 
-	// Write title
+	// Write YAML frontmatter
+	b.WriteString("---\n")
+	fmt.Fprintf(&b, "category: %s\n", note.Category)
+	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
+	fmt.Fprintf(&b, "created: %s\n", note.Created.Format("2006-01-02T15:04:05"))
+	b.WriteString("---\n")
+
+	// Write title as H1 heading
 	title := note.Title
 	if title == "" {
 		title = strings.TrimSuffix(note.File, filepath.Ext(note.File))
 	}
-	b.WriteString(title + "\n")
-	b.WriteString(strings.Repeat("=", runewidth.StringWidth(title)) + "\n")
-
-	if template != nil && bytes.HasPrefix(template, []byte("-->")) {
-		// User expects metadata to be commented out. Start to surround metadata with comment
-		b.WriteString("<!--\n")
-	}
-
-	// Write metadata
-	fmt.Fprintf(&b, "- Category: %s\n", note.Category)
-	fmt.Fprintf(&b, "- Tags: %s\n", strings.Join(note.Tags, ", "))
-	fmt.Fprintf(&b, "- Created: %s\n", note.Created.Format(time.RFC3339))
+	fmt.Fprintf(&b, "# %s\n", title)
+	b.WriteRune('\n')
 
 	if len(template) > 0 {
 		b.Write(template)
-	} else {
-		// When template is not inserted, it's better to separate metadata and body with empty line
-		b.WriteRune('\n')
 	}
 
 	d := note.DirPath()
@@ -143,9 +123,8 @@ func (note *Note) Create() error {
 	}
 	defer f.Close()
 
-	f.Write(b.Bytes())
-
-	return nil
+	_, err = f.Write(b.Bytes())
+	return err
 }
 
 // Open opens the note using an editor command user set. When user did not set any editor command
@@ -164,41 +143,45 @@ func (note *Note) ReadBodyLines(maxLines int) (string, int, error) {
 	}
 	defer f.Close()
 
-	// Skip metadata
 	r := bufio.NewReader(f)
-	sawCat, sawTags, sawCreated := false, false, false
+
+	// Skip YAML frontmatter (--- ... ---)
+	firstLine, err := r.ReadString('\n')
+	if err != nil || strings.TrimSpace(firstLine) != "---" {
+		return "", 0, errors.Errorf("Cannot read frontmatter of note file. Some metadata may be missing in '%s'", note.RelFilePath())
+	}
 	for {
-		t, err := r.ReadString('\n')
-		if strings.HasPrefix(t, "- Category: ") {
-			sawCat = true
-		} else if strings.HasPrefix(t, "- Tags:") {
-			sawTags = true
-		} else if strings.HasPrefix(t, "- Created: ") {
-			sawCreated = true
-		}
-		if sawCat && sawTags && sawCreated {
-			break
-		}
+		line, err := r.ReadString('\n')
 		if err != nil {
 			return "", 0, errors.Wrapf(err, "Cannot read metadata of note file. Some metadata may be missing in '%s'", note.RelFilePath())
 		}
+		if strings.TrimSpace(line) == "---" {
+			break
+		}
 	}
 
-	var buf bytes.Buffer
-	var readLines int
-
-	// Skip empty lines
+	// Skip blank lines and H1 title line to reach body
+	var firstBodyLine []byte
 	for {
 		b, err := r.ReadBytes('\n')
 		if err != nil {
-			break
+			return "", 0, nil // no body
 		}
-		if len(b) > 1 && !reHorizontalRule.Match(b) && !bytes.Equal(b, closingComment) {
-			buf.Write(b)
-			readLines++
-			break
+		s := strings.TrimSpace(string(b))
+		if s == "" || strings.HasPrefix(s, "# ") {
+			continue
 		}
+		firstBodyLine = b
+		break
 	}
+
+	if len(firstBodyLine) == 0 {
+		return "", 0, nil
+	}
+
+	var buf bytes.Buffer
+	buf.Write(firstBodyLine)
+	readLines := 1
 
 	for numLines := 1; numLines < maxLines; numLines++ {
 		b, err := r.ReadBytes('\n')
@@ -244,7 +227,7 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 }
 
 // LoadNote reads note file from given path, parses it and creates Note instance. When given file path
-// does not exist or when the file does note contain mandatory metadata ('Category', 'Tags' and 'Created'),
+// does not exist or when the file does not contain mandatory metadata ('category', 'tags' and 'created'),
 // this function returns an error
 func LoadNote(path string, cfg *Config) (*Note, error) {
 	// This is necessary for macOS, where path contains NFD format
@@ -257,55 +240,69 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	defer f.Close()
 
 	note := &Note{Config: cfg}
-
 	note.File = filepath.Base(path)
 
 	s := bufio.NewScanner(f)
-	titleFound := false
+
+	// Expect opening ---
+	if !s.Scan() || s.Text() != "---" {
+		return nil, errors.Errorf("Note '%s' must start with YAML frontmatter '---'", canonPath(path))
+	}
+
+	// Parse frontmatter fields
 	for s.Scan() {
 		line := s.Text()
-		// First line is title
-		if !titleFound {
-			if reTitleBar.MatchString(line) {
-				if note.Title == "" {
-					note.Title = "(no title)"
-				}
-				titleFound = true
-			} else {
-				note.Title = strings.TrimSpace(line)
-			}
-		} else if strings.HasPrefix(line, "- Category: ") {
-			note.Category = strings.TrimSpace(line[12:])
-		} else if strings.HasPrefix(line, "- Tags:") {
-			tags := strings.Split(line[7:], ",")
-			note.Tags = make([]string, 0, len(tags))
-			for _, t := range tags {
-				t = strings.TrimSpace(t)
-				if t != "" {
+		if line == "---" {
+			break
+		}
+		switch {
+		case strings.HasPrefix(line, "category: "):
+			note.Category = strings.TrimSpace(line[10:])
+		case strings.HasPrefix(line, "tags: "):
+			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[6:]), "[]"))
+			note.Tags = make([]string, 0)
+			for _, t := range strings.Split(raw, ",") {
+				if t = strings.TrimSpace(t); t != "" {
 					note.Tags = append(note.Tags, t)
 				}
 			}
-		} else if strings.HasPrefix(line, "- Created: ") {
-			t, err := time.Parse(time.RFC3339, strings.TrimSpace(line[11:]))
+		case strings.HasPrefix(line, "created: "):
+			raw := strings.TrimSpace(line[9:])
+			t, err := time.ParseInLocation("2006-01-02T15:04:05", raw, time.Local)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Cannot parse created date time as RFC3339 format: %s", line)
+				// Fall back to RFC3339 for files that still carry a timezone offset
+				t, err = time.Parse(time.RFC3339, raw)
+				if err != nil {
+					return nil, errors.Wrapf(err, "Cannot parse created date time as RFC3339 format: %s", line)
+				}
 			}
 			note.Created = t
 		}
-		if note.Category != "" && note.Tags != nil && !note.Created.IsZero() && note.Title != "" {
-			break
-		}
 	}
+
 	if err := s.Err(); err != nil {
 		return nil, errors.Wrapf(err, "Cannot read note file '%s'", canonPath(path))
 	}
 
-	if !titleFound {
-		return nil, errors.Errorf("No title found in note '%s'. Didn't you use '====' bar for h1 title?", canonPath(path))
+	if note.Category == "" || note.Tags == nil || note.Created.IsZero() {
+		return nil, errors.Errorf("Missing metadata in file '%s'. 'category', 'tags', 'created' are mandatory", canonPath(path))
 	}
 
-	if note.Category == "" || note.Tags == nil || note.Created.IsZero() {
-		return nil, errors.Errorf("Missing metadata in file '%s'. 'Category', 'Tags', 'Created' are mandatory", canonPath(path))
+	// Parse title from H1 heading that follows the closing ---
+	for s.Scan() {
+		line := s.Text()
+		if strings.HasPrefix(line, "# ") {
+			note.Title = strings.TrimSpace(line[2:])
+			break
+		}
+		if strings.TrimSpace(line) != "" {
+			// Non-blank line that is not an H1 heading — treat as no title
+			break
+		}
+	}
+
+	if note.Title == "" {
+		note.Title = "(no title)"
 	}
 
 	parent := filepath.Dir(path)
