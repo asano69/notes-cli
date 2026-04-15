@@ -92,7 +92,7 @@ func (note *Note) Create() error {
 	b.WriteString("---\n")
 	fmt.Fprintf(&b, "category: %s\n", note.Category)
 	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
-	fmt.Fprintf(&b, "created: %s\n", note.Created.Format("2006-01-02T15:04:05"))
+	fmt.Fprintf(&b, "created: %s\n", note.Created.Format(time.RFC3339))
 	b.WriteString("---\n")
 
 	// Write title as H1 heading
@@ -289,10 +289,10 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			inTagsList = true
 		case strings.HasPrefix(line, "created: "):
 			raw := strings.TrimSpace(line[9:])
-			t, err := time.ParseInLocation("2006-01-02T15:04:05", raw, time.Local)
+			t, err := time.Parse(time.RFC3339, raw)
 			if err != nil {
-				// Fall back to RFC3339 for files that still carry a timezone offset
-				t, err = time.Parse(time.RFC3339, raw)
+				// Fall back to old format without timezone offset for existing notes
+				t, err = time.ParseInLocation("2006-01-02T15:04:05", raw, time.Local)
 				if err != nil {
 					return nil, errors.Wrapf(err, "Cannot parse created date time as RFC3339 format: %s", line)
 				}
