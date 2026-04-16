@@ -13,7 +13,7 @@ import (
 type ConfigCmd struct {
 	cli    *kingpin.CmdClause
 	Config *Config
-	// Name is a name of configuration. Must be one of "", "home", "git" or "editor"
+	// Name is a name of configuration. Must be one of "", "home", "git", "editor", "fzf", "bat"
 	Name string
 	// Out is a writer to write output of this command. Kind of stdout is expected
 	Out io.Writer
@@ -21,7 +21,7 @@ type ConfigCmd struct {
 
 func (cmd *ConfigCmd) defineCLI(app *kingpin.Application) {
 	cmd.cli = app.Command("config", "Output config values to stdout. By default output all values with KEY=VALUE style")
-	cmd.cli.Arg("name", "Key name. One of 'home', 'git', 'editor'. Only value will be output").StringVar(&cmd.Name)
+	cmd.cli.Arg("name", "Key name. One of 'home', 'git', 'editor', 'fzf', 'bat'. Only value will be output").StringVar(&cmd.Name)
 }
 
 func (cmd *ConfigCmd) matchesCmdline(cmdline string) bool {
@@ -34,10 +34,13 @@ func (cmd *ConfigCmd) Do() error {
 	case "":
 		fmt.Fprintf(
 			cmd.Out,
-			"HOME=%s\nGIT=%s\nEDITOR=%s\n",
+			"HOME=%s\nGIT=%s\nEDITOR=%s\nFZF=%s\nBAT=%s\nFZF_PREVIEW_WINDOW=%s\n",
 			cmd.Config.HomePath,
 			cmd.Config.GitPath,
 			cmd.Config.EditorCmd,
+			cmd.Config.FzfCmd,
+			cmd.Config.BatCmd,
+			cmd.Config.FzfPreviewWindow,
 		)
 	case "home":
 		fmt.Fprintln(cmd.Out, cmd.Config.HomePath)
@@ -45,6 +48,10 @@ func (cmd *ConfigCmd) Do() error {
 		fmt.Fprintln(cmd.Out, cmd.Config.GitPath)
 	case "editor":
 		fmt.Fprintln(cmd.Out, cmd.Config.EditorCmd)
+	case "fzf":
+		fmt.Fprintln(cmd.Out, cmd.Config.FzfCmd)
+	case "bat":
+		fmt.Fprintln(cmd.Out, cmd.Config.BatCmd)
 	default:
 		return errors.Errorf("Unknown config name '%s'", cmd.Name)
 	}

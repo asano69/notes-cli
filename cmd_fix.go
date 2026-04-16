@@ -1,12 +1,9 @@
 package notes
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"strings"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -28,59 +25,6 @@ func (cmd *FixCmd) defineCLI(app *kingpin.Application) {
 
 func (cmd *FixCmd) matchesCmdline(cmdline string) bool {
 	return cmd.cli.FullCommand() == cmdline
-}
-
-// fixCategoryInFile rewrites the category field in the YAML frontmatter of the given file.
-func fixCategoryInFile(path, correctCategory string) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-
-	var lines []string
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	f.Close()
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	// Rewrite the category line inside the YAML frontmatter (between the two --- markers).
-	inFrontmatter := false
-	fixed := false
-	for i, line := range lines {
-		if line == "---" {
-			if !inFrontmatter {
-				inFrontmatter = true
-				continue
-			}
-			// Closing --- reached without finding the category line; give up.
-			break
-		}
-		if inFrontmatter && strings.HasPrefix(line, "category: ") {
-			lines[i] = "category: " + correctCategory
-			fixed = true
-			break
-		}
-	}
-
-	if !fixed {
-		return fmt.Errorf("category field not found in frontmatter of %q", path)
-	}
-
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	w := bufio.NewWriter(out)
-	for _, line := range lines {
-		fmt.Fprintln(w, line)
-	}
-	return w.Flush()
 }
 
 // Do runs `notes fix` command and returns an error if any occurs.
@@ -109,7 +53,7 @@ func (cmd *FixCmd) Do() error {
 				continue
 			}
 
-			if err := fixCategoryInFile(p, mismatch.pathcat); err != nil {
+			if err := updateCategoryInFile(p, mismatch.pathcat); err != nil {
 				return err
 			}
 			fixed++

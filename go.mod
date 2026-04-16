@@ -3,6 +3,7 @@ module github.com/rhysd/notes-cli
 go 1.19
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/fatih/color v1.13.0
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/mattn/go-colorable v0.1.13
