@@ -61,7 +61,21 @@ func runFzf(cfg *Config, input string, opts fzfOptions) ([]string, error) {
 		args = append(args, "--header="+opts.Header)
 	}
 
-	return runFzfRaw(cmdline[0], args, input)
+	lines, err := runFzfRaw(cmdline[0], args, input)
+	if err != nil || len(lines) == 0 {
+		return lines, err
+	}
+
+	// Each output line is "<rel-path>\t<display text>"; keep only the first field.
+	result := make([]string, 0, len(lines))
+	for _, l := range lines {
+		if idx := strings.IndexByte(l, '\t'); idx >= 0 {
+			result = append(result, l[:idx])
+		} else {
+			result = append(result, l)
+		}
+	}
+	return result, nil
 }
 
 // runFzfLines runs fzf over arbitrary line input (e.g. a list of tag names)
