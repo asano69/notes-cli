@@ -73,6 +73,13 @@ func ParseCmd(args []string) (Cmd, error) {
 		&SaveCmd{Config: c},
 		&ConfigCmd{Config: c, Out: os.Stdout},
 		&FixCmd{Config: c, Out: os.Stdout},
+		// Interactive fzf-based subcommands
+		&EditCmd{Config: c},
+		&DeleteCmd{Config: c},
+		&RenameCmd{Config: c},
+		&MoveCmd{Config: c},
+		&TagAddCmd{Config: c},
+		&TagDelCmd{Config: c},
 	}
 
 	for _, cmd := range cmds {

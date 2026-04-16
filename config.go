@@ -27,6 +27,15 @@ type Config struct {
 	EditorCmd string
 	// PagerCmd is a command for paging output from 'list' subcommand. If $NOTES_CLI_PAGER is set, it is used.
 	PagerCmd string
+	// FzfCmd is the fzf command used by interactive subcommands. Defaults to "fzf".
+	// Override with $NOTES_CLI_FZF or fzf_cmd in .notes-cli.toml.
+	FzfCmd string
+	// BatCmd is the bat command used for fzf preview. Defaults to "bat".
+	// Override with $NOTES_CLI_BAT or bat_cmd in .notes-cli.toml.
+	BatCmd string
+	// FzfPreviewWindow is the --preview-window value passed to fzf. Defaults to "up:60%".
+	// Override with $NOTES_CLI_FZF_PREVIEW_WINDOW or fzf_preview_window in .notes-cli.toml.
+	FzfPreviewWindow string
 }
 
 func homePath() (string, error) {
@@ -93,6 +102,15 @@ func pagerCmd() string {
 	return ""
 }
 
+// resolveToolCmd returns the value from the environment variable if set,
+// otherwise falls back to the value from the TOML config file.
+func resolveToolCmd(envKey, fileValue string) string {
+	if env, ok := os.LookupEnv(envKey); ok {
+		return env
+	}
+	return fileValue
+}
+
 // NewConfig creates a new Config instance by looking the user's environment. GitPath and EditorPath
 // may be empty when proper configuration is not found. When home directory path cannot be located,
 // this function returns an error
@@ -107,5 +125,15 @@ func NewConfig() (*Config, error) {
 		return nil, errors.Wrapf(err, "Could not create home '%s'", h)
 	}
 
-	return &Config{h, gitPath(), editorCmd(), pagerCmd()}, nil
+	fc := loadFileConfig(h)
+
+	return &Config{
+		HomePath:         h,
+		GitPath:          gitPath(),
+		EditorCmd:        editorCmd(),
+		PagerCmd:         pagerCmd(),
+		FzfCmd:           resolveToolCmd("NOTES_CLI_FZF", fc.FzfCmd),
+		BatCmd:           resolveToolCmd("NOTES_CLI_BAT", fc.BatCmd),
+		FzfPreviewWindow: resolveToolCmd("NOTES_CLI_FZF_PREVIEW_WINDOW", fc.FzfPreviewWindow),
+	}, nil
 }
