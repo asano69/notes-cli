@@ -289,6 +289,9 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			inTagsList = true
 		case strings.HasPrefix(line, "created: "):
 			raw := strings.TrimSpace(line[9:])
+			if raw == "" {
+				break
+			}
 			t, err := time.Parse(time.RFC3339, raw)
 			if err != nil {
 				// Fall back to old format without timezone offset for existing notes
