@@ -39,8 +39,12 @@ type Note struct {
 	Created time.Time
 	// File is a file name of the note
 	File string
-	// Title is a title string of the note. When the note is not created yet, it may be empty
+	// Title is a title string of the note
 	Title string
+	// Summary is an optional short description of the note
+	Summary string
+	// Code is an optional code identifier or snippet associated with the note
+	Code string
 }
 
 // DirPath returns the absolute category directory path of the note
@@ -86,21 +90,23 @@ func (note *Note) Create() error {
 		template = b
 	}
 
-	var b bytes.Buffer
-
-	// Write YAML frontmatter
-	b.WriteString("---\n")
-	fmt.Fprintf(&b, "category: %s\n", note.Category)
-	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
-	fmt.Fprintf(&b, "created: %s\n", note.Created.Format(time.RFC3339))
-	b.WriteString("---\n")
-
-	// Write title as H1 heading
 	title := note.Title
 	if title == "" {
 		title = strings.TrimSuffix(note.File, filepath.Ext(note.File))
 	}
-	fmt.Fprintf(&b, "# %s\n", title)
+
+	var b bytes.Buffer
+
+	// Write YAML frontmatter in the new format.
+	// Fields: title, date, summary, categories, tags, code.
+	b.WriteString("---\n")
+	fmt.Fprintf(&b, "title: %s\n", title)
+	fmt.Fprintf(&b, "date: %s\n", note.Created.Format(time.RFC3339))
+	fmt.Fprintf(&b, "summary: \n")
+	fmt.Fprintf(&b, "categories: [%s]\n", note.Category)
+	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
+	fmt.Fprintf(&b, "code: \n")
+	b.WriteString("---\n")
 	b.WriteRune('\n')
 
 	if len(template) > 0 {
@@ -160,7 +166,9 @@ func (note *Note) ReadBodyLines(maxLines int) (string, int, error) {
 		}
 	}
 
-	// Skip blank lines and H1 title line to reach body
+	// Skip blank lines and legacy H1 title lines to reach body content.
+	// New-format notes have no H1, but old notes do; skipping "# ..." lines
+	// preserves backward compatibility without showing the title twice.
 	var firstBodyLine []byte
 	for {
 		b, err := r.ReadBytes('\n')
@@ -223,12 +231,12 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 	if !strings.HasSuffix(file, ".md") {
 		file += ".md"
 	}
-	return &Note{cfg, cat, ts, time.Now(), file, title}, nil
+	return &Note{cfg, cat, ts, time.Now(), file, title, "", ""}, nil
 }
 
 // LoadNote reads note file from given path, parses it and creates Note instance. When given file path
-// does not exist or when the file does not contain mandatory metadata ('category', 'tags' and 'created'),
-// this function returns an error
+// does not exist or when the file does not contain mandatory metadata ('category'/'categories', 'tags'
+// and 'created'/'date'), this function returns an error.
 func LoadNote(path string, cfg *Config) (*Note, error) {
 	// This is necessary for macOS, where path contains NFD format
 	path = normPathNFD(path)
@@ -249,7 +257,9 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 		return nil, errors.Errorf("Note '%s' must start with YAML frontmatter '---'", canonPath(path))
 	}
 
-	// Parse frontmatter fields
+	// Parse frontmatter fields.
+	// Supports both the new format (title, date, categories, summary, code) and the
+	// legacy format (category, created) for backward compatibility.
 	inTagsList := false
 	for s.Scan() {
 		line := s.Text()
@@ -257,7 +267,7 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			break
 		}
 
-		// Handle block-style tags (Obsidian format):
+		// Handle block-style tags (e.g. Obsidian format):
 		//   tags:
 		//     - foo
 		//     - bar
@@ -272,8 +282,23 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 		}
 
 		switch {
+		case strings.HasPrefix(line, "title: "):
+			note.Title = strings.TrimSpace(line[7:])
+
+		// New format: categories as a list; the first element is used as the category.
+		case strings.HasPrefix(line, "categories: "):
+			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[12:]), "[]"))
+			for _, c := range strings.Split(raw, ",") {
+				if c = strings.TrimSpace(c); c != "" {
+					note.Category = c
+					break
+				}
+			}
+
+		// Legacy format: single category string.
 		case strings.HasPrefix(line, "category: "):
 			note.Category = strings.TrimSpace(line[10:])
+
 		case strings.HasPrefix(line, "tags: "):
 			// Inline format: tags: [foo, bar]
 			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[6:]), "[]"))
@@ -287,6 +312,23 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			// Block format: tags followed by "- item" lines
 			note.Tags = make([]string, 0)
 			inTagsList = true
+
+		// New format: date field.
+		case strings.HasPrefix(line, "date: "):
+			raw := strings.TrimSpace(line[6:])
+			if raw == "" {
+				break
+			}
+			t, err := time.Parse(time.RFC3339, raw)
+			if err != nil {
+				t, err = time.ParseInLocation("2006-01-02T15:04:05", raw, time.Local)
+				if err != nil {
+					return nil, errors.Wrapf(err, "Cannot parse date as RFC3339 format: %s", line)
+				}
+			}
+			note.Created = t
+
+		// Legacy format: created field.
 		case strings.HasPrefix(line, "created: "):
 			raw := strings.TrimSpace(line[9:])
 			if raw == "" {
@@ -301,6 +343,12 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 				}
 			}
 			note.Created = t
+
+		case strings.HasPrefix(line, "summary:"):
+			note.Summary = strings.TrimSpace(line[8:])
+
+		case strings.HasPrefix(line, "code:"):
+			note.Code = strings.TrimSpace(line[5:])
 		}
 	}
 
@@ -309,19 +357,22 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	}
 
 	if note.Category == "" || note.Tags == nil || note.Created.IsZero() {
-		return nil, errors.Errorf("Missing metadata in file '%s'. 'category', 'tags', 'created' are mandatory", canonPath(path))
+		return nil, errors.Errorf("Missing metadata in file '%s'. 'category'/'categories', 'tags', and 'created'/'date' are mandatory", canonPath(path))
 	}
 
-	// Parse title from H1 heading that follows the closing ---
-	for s.Scan() {
-		line := s.Text()
-		if strings.HasPrefix(line, "# ") {
-			note.Title = strings.TrimSpace(line[2:])
-			break
-		}
-		if strings.TrimSpace(line) != "" {
-			// Non-blank line that is not an H1 heading — treat as no title
-			break
+	// For old-format notes, title lives in the H1 heading after the closing ---.
+	// For new-format notes, title was already set from the frontmatter above.
+	if note.Title == "" {
+		for s.Scan() {
+			line := s.Text()
+			if strings.HasPrefix(line, "# ") {
+				note.Title = strings.TrimSpace(line[2:])
+				break
+			}
+			if strings.TrimSpace(line) != "" {
+				// Non-blank line that is not an H1 heading — treat as no title
+				break
+			}
 		}
 	}
 
