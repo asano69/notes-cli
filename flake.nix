@@ -1,4 +1,5 @@
 # notes-cli/flake.nix
+#  nix build "github:asano69/notes-cli/v0.0.5#default"
 {
   description = "Forked notes-cli";
 
@@ -14,7 +15,7 @@
       packages = forAllSystems (system: {
         default = (pkgsFor system).buildGoModule {
           pname = "notes-cli";
-          version = "0.0.4";
+          version = "0.0.5";
           src = self;
           vendorHash = "sha256-vQAy9veI7g+w9AyGqvtBWVGXLoVlnNF5/2YR3fecRzI=";
           meta = with (pkgsFor system).lib; {
