@@ -14,7 +14,7 @@
       packages = forAllSystems (system: {
         default = (pkgsFor system).buildGoModule {
           pname = "notes-cli";
-          version = "0.0.1";
+          version = "0.0.2";
           src = self;
           vendorHash = "sha256-vQAy9veI7g+w9AyGqvtBWVGXLoVlnNF5/2YR3fecRzI=";
           meta = with (pkgsFor system).lib; {
