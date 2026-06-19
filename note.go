@@ -272,6 +272,7 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	// Supports both the new format (title, date, categories, summary, code) and the
 	// legacy format (category, created) for backward compatibility.
 	inTagsList := false
+	inCategoriesList := false
 	for s.Scan() {
 		line := s.Text()
 		if line == "---" {
@@ -292,11 +293,26 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			inTagsList = false
 		}
 
+		// Handle block-style categories (e.g. Hugo/Obsidian format):
+		//   categories:
+		//     - foo
+		//     - bar
+		// Only the first item is used, same as the inline format below.
+		if inCategoriesList {
+			if trimmed := strings.TrimSpace(line); strings.HasPrefix(trimmed, "- ") {
+				if c := strings.TrimSpace(trimmed[2:]); c != "" && note.Category == "" {
+					note.Category = c
+				}
+				continue
+			}
+			inCategoriesList = false
+		}
+
 		switch {
 		case strings.HasPrefix(line, "title: "):
 			note.Title = strings.TrimSpace(line[7:])
 
-		// New format: categories as a list; the first element is used as the category.
+		// New format: categories as an inline list; the first element is used as the category.
 		case strings.HasPrefix(line, "categories: "):
 			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[12:]), "[]"))
 			for _, c := range strings.Split(raw, ",") {
@@ -305,6 +321,10 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 					break
 				}
 			}
+
+		// New format: categories as a block list (see inCategoriesList above).
+		case line == "categories:":
+			inCategoriesList = true
 
 		// Legacy format: single category string.
 		case strings.HasPrefix(line, "category: "):
