@@ -98,14 +98,15 @@ func (note *Note) Create() error {
 	var b bytes.Buffer
 
 	// Write YAML frontmatter in the new format.
-	// Fields: title, date, summary, categories, tags, code.
+	// Fields: title, summary, tags, categories, draft, date, lastmod.
 	b.WriteString("---\n")
 	fmt.Fprintf(&b, "title: %s\n", title)
-	fmt.Fprintf(&b, "date: %s\n", note.Created.Format(time.RFC3339))
 	fmt.Fprintf(&b, "summary: \n")
-	fmt.Fprintf(&b, "categories: [%s]\n", note.Category)
 	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
-	fmt.Fprintf(&b, "code: \n")
+	fmt.Fprintf(&b, "categories: [%s]\n", note.Category)
+	fmt.Fprintf(&b, "draft: \n")
+	fmt.Fprintf(&b, "date: %s\n", note.Created.Format(time.RFC3339))
+	fmt.Fprintf(&b, "lastmod: \n")
 	b.WriteString("---\n")
 	b.WriteRune('\n')
 
@@ -205,6 +206,7 @@ func (note *Note) ReadBodyLines(maxLines int) (string, int, error) {
 
 // NewNote creates a new note instance with given parameters and configuration. Category and file name
 // cannot be empty. If given file name lacks file extension, it automatically adds ".md" to file name.
+// The created file name is also prefixed with the creation date as "YYYY-MM-DD-".
 func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 	cat = strings.TrimSpace(cat)
 	file = strings.TrimSpace(file)
@@ -231,7 +233,16 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 	if !strings.HasSuffix(file, ".md") {
 		file += ".md"
 	}
-	return &Note{cfg, cat, ts, time.Now(), file, title, "", ""}, nil
+
+	// Default title is derived from the file name before the date prefix is added below.
+	if title == "" {
+		title = strings.TrimSuffix(file, ".md")
+	}
+
+	now := time.Now()
+	file = now.Format("2006-01-02") + "-" + file
+
+	return &Note{cfg, cat, ts, now, file, title, "", ""}, nil
 }
 
 // LoadNote reads note file from given path, parses it and creates Note instance. When given file path
