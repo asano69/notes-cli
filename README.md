@@ -1,5 +1,4 @@
-A small CLI note taking tool with your favorite editor
-======================================================
+# A small CLI note taking tool with your favorite editor
 
 This is a small CLI tool for note taking in terminal with your favorite editor.
 You can manage (create/open/list) notes via this tool on terminal.
