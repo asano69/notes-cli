@@ -1,11 +1,16 @@
-# お気に入りのエディタで使える、小さなCLIメモ作成ツール
+# A small CLI note taking tool with your favorite editor
 
-これは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。
+> [!NOTE]
+> これは、[rhysd/notes-cli](https://github.com/rhysd/notes-cli/tree/master)のフォークです。
+
+notes-cliは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。  
 ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
-また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。
-このツールは、ObsidianとHugoとの互換性を重視しており、作成したノートを静的サイトにビルドすることができます。
+また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。  
 
 このツールは、`grep`（または [ag](https://github.com/ggreer/the_silver_searcher), [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) や [peco](https://github.com/peco/peco) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
+
+このツールは、ObsidianとHugoとの互換性を重視しており、作成したノートを静的サイトにビルドすることができます。
+
 
 ## 目次
 
@@ -111,27 +116,33 @@ $ notes new blog how-to-handle-files golang,file
 
 ```markdown
 ---
-category: blog
-tags: [golang, file]
-created: 2018-10-28T07:19:27
+title: Hello World!
+summary: Hugo is a static site generator written in Go. It converts Markdown 
+  files into HTML with remarkable speed.
+tags: [golang, hugo]
+categories: [wiki]
+draft:
+date: 2025-06-01T09:45:01+09:00
+lastmod: 2026-06-19T17:48:41+09:00
 ---
-# how-to-handle-files
-
 ```
 
 `category: ...`、`tags: ...`、`created: ...` の行、およびタイトル（`# how-to-handle-files`）は削除しないでください。これらは `notes` コマンドによって使用されます（内容を変更する分には問題ありません）。デフォルトのタイトルはファイル名になります。以下のように、メモのタイトルや本文を自由に編集できます。
 
 ```markdown
 ---
-category: blog
-tags: [golang, file]
-created: 2018-10-28T07:19:27
+title: Hello World!
+summary: Hugo is a static site generator written in Go. It converts Markdown 
+  files into HTML with remarkable speed.
+tags: [golang, hugo]
+categories: [wiki]
+draft:
+date: 2025-06-01T09:45:01+09:00
+lastmod: 2026-06-19T17:48:41+09:00
 ---
-# how-to-handle-files
 
 ドキュメントを読んでください。
 GoDocがすべてを解説しています。
-
 ```
 
 すべてのメモは、そのメモのカテゴリディレクトリ配下に配置されます。メモのカテゴリを変更する場合は、手動でディレクトリ構造を調整（メモファイルを新しいカテゴリのディレクトリへ移動）する必要があります。
