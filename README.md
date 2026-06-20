@@ -628,9 +628,16 @@ command! -nargs=* NotesLastMod call <SID>notes_last_mod(<q-args>)
 
 
 ## update
-```shell
+```sh
 go get -u ./...
 go mod tidy
+
+# flakeのバージョンを更新
+# go mod vendor
+git add go.mod go.sum
+nix build .
+
+# flake.nixのvendor hashの更新
 ```
 
 ## ライセンス

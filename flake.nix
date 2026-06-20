@@ -15,9 +15,9 @@
       packages = forAllSystems (system: {
         default = (pkgsFor system).buildGoModule {
           pname = "notes-cli";
-          version = "0.0.5";
+          version = "0.0.6";
           src = self;
-          vendorHash = "sha256-vQAy9veI7g+w9AyGqvtBWVGXLoVlnNF5/2YR3fecRzI=";
+          vendorHash = "sha256-BVdD8ie3rtjrDEYSxlxsbCktPeR4c+BC7hbL5XOSqO0=";
           meta = with (pkgsFor system).lib; {
             description = "Forked notes-cli";
             homepage = "https://github.com/asano69/notes-cli";
