@@ -626,6 +626,13 @@ command! -nargs=* NotesLastMod call <SID>notes_last_mod(<q-args>)
 * `:NotesNew [args]`: 新しいメモを作成し、新しいバッファで開きます。`args` は `notes new` と同じですが、カテゴリとファイル名は空にすることができます。その場合、コマンドの開始後に Vim から入力を求められます。
 * `:NotesLastMod [args]`: 最後に変更されたメモを新しいバッファで開きます。`args` が指定された場合は、内部の `notes list` コマンドの実行に渡されるため、`-c` や `-t` を使ってカテゴリやタグで結果をフィルタリングできます。
 
+
+## update
+```shell
+go get -u ./...
+go mod tidy
+```
+
 ## ライセンス
 
 [MIT License](LICENSE.txt)
