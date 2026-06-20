@@ -1,138 +1,112 @@
-# A small CLI note taking tool with your favorite editor
+# お気に入りのエディタで使える、小さなCLIメモ作成ツール
 
-This is a small CLI tool for note taking in terminal with your favorite editor.
-You can manage (create/open/list) notes via this tool on terminal.
-This tool also optionally can save your notes thanks to Git to avoid losing your notes.
+これは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。
+ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
+また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。
 
-This tool is intended to be used nicely with other commands such as `grep` (or [ag][], [rg][]),
-`rm`, filtering tools such as [fzf][] or [peco][] and editors which can be started from command line.
+このツールは、`grep`（または [ag](https://github.com/ggreer/the_silver_searcher), [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) や [peco](https://github.com/peco/peco) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
 
+## 目次
 
-## Table of Contents
-
-* [Installation](#installation)
-* [Basic Usage](#basic-usage)
-* [Usage](#usage)
+* [インストール](#インストール)
+* [基本的な使い方](#基本的な使い方)
+* [使い方](#使い方)
 * [FAQ](#faq)
-* [License](#license)
+* [ライセンス](#ライセンス)
 
+## インストール
 
-
-## Installation
-
-You can install by building from source directly as follows. Go toolchain 1.16 or later is necessary.
+以下のように、ソースから直接ビルドしてインストールできます。Goのツールチェーン（バージョン1.16以降）が必要です。
 
 ```
 $ go install github.com/asano69/notes-cli/cmd/notes
+
 ```
 
-Before starting to use, you can try it with examples.
+実際に使い始める前に、サンプルを使って試すことができます。
 
 ```sh
 $ git clone https://github.com/asano69/notes-cli.git
 $ cd notes-cli/
 $ export NOTES_CLI_HOME="$(pwd)/example/notes-cli"
-$ export NOTES_CLI_EDITOR=vim # Set your favorite editor
+$ export NOTES_CLI_EDITOR=vim # お気に入りのエディタを設定
 $ notes list --full
 $ notes new test my-local-trial
-$ git status # Check what file was created in home
+$ git status # ホームディレクトリにどのようなファイルが作成されたか確認
+
 ```
 
-To uninstall:
+アンインストールする場合：
 
 ```sh
-$ rm -rf "$(notes config home)" # Remove all notes
-$ rm "$(which notes)" # Remove an executable
+$ rm -rf "$(notes config home)" # すべてのメモを削除
+$ rm "$(which notes)" # 実行ファイルを削除
+
 ```
 
+## 基本的な使い方
 
+`notes` は、Markdown形式のメモを管理するためのサブコマンドをいくつか提供しています。
 
-## Basic Usage
+* `notes new <category> <filename> [<tags>]` で新しいメモを作成します。すべてのメモは必ず1つのカテゴリに属する必要があり、タグは0個以上指定できます。
+* `notes ls -e` を実行すると、既存のメモをお気に入りのエディタで開くことができます。この場合、`$NOTES_CLI_EDITOR`（設定されていない場合は代替として `EDITOR`）が設定されている必要があります。
+* `notes ls -o` を実行すると、既存のメモをターミナル上で確認できます（`-o` は各メモの情報を1行で表示することを意味します）。
 
-`notes` provides some subcommands to manage your markdown notes.
-
-- Create a new note with `notes new <category> <filename> [<tags>]`. Every note must have one category
-  and it can have zero or more tags.
-- Open existing note by `notes ls -e` and your favorite editor. `$NOTES_CLI_EDITOR` (or `EDITOR` as fallback) must be set.
-- Check existing notes on terminal with `notes ls -o` (`-o` means showing one line information for
-  each note).
-
-Directories structure under notes-cli home is something like:
+notes-cliのホームディレクトリ下のディレクトリ構造は、以下のようになります。
 
 ```
 <HOME>
 ├── category1
-│   ├── nested-category
-│   │   └── note3.md
-│   ├── note1.md
-│   └── note2.md
+│   ├── nested-category
+│   │   └── note3.md
+│   ├── note1.md
+│   └── note2.md
 ├── category2
-│   ├── note4.md
-│   └── note5.md
+│   ├── note4.md
+│   └── note5.md
 └── category3
     └── note6.md
+
 ```
 
-where `<HOME>` is [XDG Data directory][xdg-dirs] (on macOS, `~/.local/share/notes-cli`) by default
-and can be specified by `$NOTES_CLI_HOME` environment variable.
+ここで、`<HOME>` はデフォルトで [XDG Data ディレクトリ](https://wiki.archlinux.org/index.php/XDG_Base_Directory)（macOSの場合は `~/.local/share/notes-cli`）となり、環境変数 `$NOTES_CLI_HOME` で指定することもできます。
 
-You can see more practical example home directory at [example directory](./example/notes-cli).
+より実践的なホームディレクトリの例は、[example ディレクトリ](./example/notes-cli) で確認できます。
 
+## 使い方
 
+このセクションでは、各操作の詳細な使い方を説明します。
 
-## Usage
+* [新しいメモを作成する](#新しいメモを作成する)
+* [作成したメモを柔軟に開く](#作成したメモを柔軟に開く)
+* [作成したメモをリストとして確認する](#作成したメモをリストとして確認する)
+* [メモのテンプレート](#メモのテンプレート)
+* [Gitリポジトリにメモを保存する](#gitリポジトリにメモを保存する)
+* [環境変数で動作を設定する](#環境変数で動作を設定する)
+* [新しいサブコマンドを追加して notes コマンドを拡張する](#新しいサブコマンドを追加して-notes-コマンドを拡張する)
+* [シェルでの補完](#シェルでの補完)
+* [man マニュアルの設定](#man-マニュアルの設定)
+* [ツール自体のアップデート](#ツール自体のアップデート)
+* [Goプログラムから使用する](#goプログラムから使用する)
 
-This section describes detailed usages for each operation.
+### 新しいメモを作成する
 
-* [Create a new note](#create-a-new-note)
-* [Flexibly open notes you created](#flexibly-open-notes-you-created)
-* [Check notes you created as list](#check-notes-you-created-as-list)
-* [Note Templates](#note-templates)
-* [Save notes to Git repository](#save-notes-to-git-repository)
-* [Configure behavior with environment variables](#configure-behavior-with-environment-variables)
-* [Extend `notes` command by adding new subcommands](#extend-notes-command-by-adding-new-subcommands)
-* [Shell Completions](#shell-completions)
-* [Setup `man` manual](#setup-man-manual)
-* [Update itself](#update-itself)
-* [Use from Go program](#use-from-go-program)
-
-
-### Create a new note
-
-For example,
+たとえば、次のように実行します。
 
 ```
 $ notes new blog how-to-handle-files golang,file
+
 ```
 
-creates a note file at `<HOME>/notes-cli/blog/how-to-handle-files.md`. The home directory is automatically
-created.
+これにより、`<HOME>/notes-cli/blog/how-to-handle-files.md` にメモファイルが作成されます。ホームディレクトリは自動的に作成されます。
 
-Category is `blog`. Every note must belong to one category. Category can be nested with `/`. For example,
-if have multiple blogs Blog A and Blog B, you may want to categorize blog posts with categories like
-`blog/A`, `blog/B`.
+カテゴリは `blog` です。すべてのメモは必ず1つのカテゴリに属している必要があります。カテゴリは `/` を使って階層化（ネスト）できます。たとえば、Blog A と Blog B のように複数のブログを運営している場合、`blog/A`、`blog/B` のようなカテゴリでブログ記事を分類すると便利です。
 
-Tags are `golang` and `file`. Tags are labels to organize notes and to make search notes easier.
-Tags can be omitted.
+タグは `golang` と `file` です。タグはメモを整理し、検索しやすくするためのラベルです。タグは省略可能です。
 
-Category and file name cannot start with `.` not to make hidden files/directories.
+隠しファイルや隠しディレクトリが作成されないよう、カテゴリ名とファイル名の先頭に `.` を使用することはできません。
 
-If you set your favorite editor to `$NOTES_CLI_EDITOR` environment variable, it opens the newly
-created note file with it. You can seamlessly edit the file. (If it is not set, `$EDITOR` is also
-referred.)
-
-```markdown
----
-category: blog
-tags: [golang, file]
-created: 2018-10-28T07:19:27
----
-# how-to-handle-files
-```
-
-Please do not remove `category: ...`, `tags: ...` and `created: ...` lines and title.
-They are used by `notes` command (modifying them is OK).
-Default title is file name. You can edit the title and body of note as follows:
+環境変数 `$NOTES_CLI_EDITOR` にお気に入りのエディタを設定している場合、新しく作成されたメモファイルがそのエディタで開きます。そのままシームレスにファイルを編集できます。（設定されていない場合は `$EDITOR` も参照されます。）
 
 ```markdown
 ---
@@ -142,89 +116,104 @@ created: 2018-10-28T07:19:27
 ---
 # how-to-handle-files
 
-Please read documentation.
-GoDoc explains everything.
 ```
 
-Note that every note is under the category directory of the note. When you change a category of note,
-you also need to adjust directory structure manually (move the note file to new category directory).
+`category: ...`、`tags: ...`、`created: ...` の行、およびタイトル（`# how-to-handle-files`）は削除しないでください。これらは `notes` コマンドによって使用されます（内容を変更する分には問題ありません）。デフォルトのタイトルはファイル名になります。以下のように、メモのタイトルや本文を自由に編集できます。
 
-For more details, please check `notes new --help`.
+```markdown
+---
+category: blog
+tags: [golang, file]
+created: 2018-10-28T07:19:27
+---
+# how-to-handle-files
 
-
-###  Flexibly open notes you created
-
-Let's say to open some notes you created.
-
-You can show the list of note paths with:
+ドキュメントを読んでください。
+GoDocがすべてを解説しています。
 
 ```
-$ notes list # or `notes ls`
+
+すべてのメモは、そのメモのカテゴリディレクトリ配下に配置されます。メモのカテゴリを変更する場合は、手動でディレクトリ構造を調整（メモファイルを新しいカテゴリのディレクトリへ移動）する必要があります。
+
+詳細については、`notes new --help` を確認してください。
+
+### 作成したメモを柔軟に開く
+
+作成したメモをいくつか開く方法について説明します。
+
+以下のコマンドで、メモのパス一覧を表示できます。
+
+```
+$ notes list # または `notes ls`
+
 ```
 
-For example, now there is only one note so it shows one path
+たとえば、現時点でメモが1つしかない場合は、以下のように1つのパスが表示されます。
 
 ```
 /Users/me/.local/share/notes-cli/blog/how-to-handle-files.md
+
 ```
 
-Note that `/Users/<NAME>/.local/share` is a default XDG data directory on macOS or Linux and you can
-change it by setting `$NOTES_CLI_HOME` environment variable.
+なお、`/Users/<ユーザー名>/.local/share` は macOS や Linux におけるデフォルトの XDG data ディレクトリです。環境変数 `$NOTES_CLI_HOME` を設定することで、この場所を変更できます。
 
-To open the listed notes with your editor, `--edit` (or `-e`) is a quickest way.
+一覧表示されたメモをエディタで開くには、`--edit`（または `-e`）を使用するのが最も手っ取り早い方法です。
 
 ```
 $ notes list --edit
 $ notes ls -e
+
 ```
 
-When there are multiple notes, note is output per line. So you can easily retrieve some notes from
-them by filtering the list with `grep`, `head`, `peco`, `fzf`, ...
+複数のメモがある場合、メモは1行ずつ出力されます。そのため、`grep`、`head`、`peco`、`fzf` などを使ってリストをフィルタリングすることで、特定のメモを簡単に取り出すことができます。
 
 ```
 $ notes ls | grep -l file | xargs -o vim
+
 ```
 
-Or following also works.
+または、以下のような方法も機能します。
 
 ```
 vim $(notes ls | xargs grep file)
+
 ```
 
-And searching notes is also easy by using `grep`, `rg`, `ag`, ...
+また、`grep`、`rg`、`ag` などを使えば、メモの検索も簡単です。
 
 ```
 $ notes ls | xargs ag documentation
+
 ```
 
-When you want to search and open it with Vim, it's also easy.
+検索して、それをそのまま Vim で開きたい場合も簡単です。
 
 ```
 $ notes ls | xargs ag -l documentation | xargs -o vim
+
 ```
 
-`notes ls` accepts `--sort` option and changes the order of list. By default, the order is created
-date time of note in descending order. By ordering with modified time of note, you can instantly
-open last-modified note as follows since first line is a path to the note most recently modified.
+`notes ls` は `--sort` オプションを受け付け、リストの順序を変更できます。デフォルトの順序は、メモの作成日時の降順（新しい順）です。メモの更新日時（modified）で並び替えると、最新の更新ファイルが1行目に出力されるため、以下のようにして最後に編集したメモを即座に開くことができます。
 
 ```
 $ note ls --sort modified | head -1 | xargs -o vim
+
 ```
 
-For more details, please check `notes list --help`.
+詳細については、`notes list --help` を確認してください。
 
+### 作成したメモをリストとして確認する
 
-### Check notes you created as list
+`notes list` は、メモの概要をターミナルに表示することもできます。
 
-`notes list` also can show brief of notes to terminal.
-
-You can also show the full information of notes on terminal with `--full` (or `-f`) option.
+`--full`（または `-f`）オプションを使用すると、メモの全情報をターミナルに表示できます。
 
 ```
 $ notes list --full
+
 ```
 
-For example,
+出力例：
 
 ```
 /Users/me/.local/share/notes-cli/blog/how-to-handle-files.md
@@ -235,69 +224,62 @@ For example,
 How to handle files in Go
 =========================
 
-Please read documentation.
-GoDoc explains everything.
+ドキュメントを読んでください。
+GoDocがすべてを解説しています。
+
 
 ```
 
-It shows
+このオプションでは、以下の情報が色付きで表示されます。
 
-- Full path to the note file
-- Metadata `Category`, `Tags` and `Created`
-- Title of note
-- Body of note (up to 10 lines)
+* メモファイルへのフルパス
+* メタデータ（`Category`、`Tags`、`Created`）
+* メモのタイトル
+* メモの本文（最大10行まで）
 
-with colors.
+出力が大きく、画面に一度に収まらない場合、`list` コマンドは `less` コマンド（利用可能な場合）を使用して出力をページング（スクロール表示）します。この動作は `$NOTES_CLI_PAGER` でカスタマイズできます。
 
-When output is larger and whole output cannot be shown in screen at once, `list` does paging for the
-output using `less` command (if available). This behavior can be customized by `$NOTES_CLI_PAGER`.
-
-When there are many notes, it outputs many lines. In the case, a pager tool like `less` is useful
-You can also use `less` with pipe explicitly to see the output per page. `-A` global option is short
-of `--always-color`.
+メモが大量にあると多くの行が出力されます。その場合、`less` のようなページャーツールが便利です。パイプを使って明示的に `less` に渡すことで、ページごとに出力を確認することもできます。グローバルオプションの `-A` は `--always-color` の略です。
 
 ```
 $ notes -A ls --full | less -R
+
 ```
 
-When you want to see the all notes quickly, `--oneline` (or `-o`) may be more useful than `--full`.
-`notes ls --oneline` shows one brief of note per line.
+すべてのメモをすばやく確認したい場合は、`--full` よりも `--oneline`（または `-o`）の方が便利な場合があります。`notes ls --oneline` は、1つのメモの概要を1行で表示します。
 
-For example,
+出力例：
 
 ```
 blog/how-to-handle-files.md golang,file How to handle files in Go
+
 ```
 
-- 1st field indicates a relative path of note file from home directory with different colors.
-  The first part of the path is the category in green, and the second part is the file name in yellow.
-- 2nd field indicates comma-separated tags of the note. When note has no tag, it leaves as blank.
-- 3rd field is the title of note
+* 第1フィールドは、ホームディレクトリからのメモファイルの相対パスを異なる色で示します。パスの最初の部分（カテゴリ）は緑色、2番目の部分（ファイル名）は黄色で表示されます。
+* 第2フィールドは、メモのタグをカンマ区切りで示します。メモにタグがない場合は空欄になります。
+* 第3フィールドは、メモのタイトルです。
 
-This is useful for checking many notes at a glance. When output is larger, `less` is used for paging
-the output if available.
+これは、多くのメモを一目で確認するのに便利です。出力が大きい場合は、利用可能であれば `less` がページングに使用されます。
 
-For more details, please see `notes list --help`.
+詳細については、`notes list --help` を参照してください。
 
+### メモのテンプレート
 
-### Note Templates
+各カテゴリのディレクトリ、またはルートディレクトリにメモのテンプレートを作成できます。カテゴリディレクトリまたはホームに `.template.md` ファイルが配置されている場合、`notes new` を実行したときにその内容が自動的に挿入されます。
 
-You can create a template of note at each category directory or at root. When `.template.md` file
-is put in a category directory or home, it is automatically inserted on `notes new`.
-
-For example, when `HOME/minutes/.template.md` is created with following content:
+たとえば、以下の内容で `HOME/minutes/.template.md` を作成したとします。
 
 ```markdown
 ---
 
-- Agenda:
-- Attendee:
+- アジェンダ:
+- 出席者:
+
 
 
 ```
 
-Executing `notes new minutes weekly-meeting-2018-11-07` will create a new note with inserting the
-template like:
+この状態で `notes new minutes weekly-meeting-2018-11-07` を実行すると、以下のようにテンプレートが挿入された新しいメモが作成されます。
 
 ```markdown
 weekly-meeting-2018-11-07
@@ -308,319 +290,279 @@ weekly-meeting-2018-11-07
 
 ---
 
-- Agenda:
-- Attendee:
+- アジェンダ:
+- 出席者:
+
 ```
 
-Template file at category directory is prioritized. For example, when `notes new minutes weekly-meeting-2018-11-07`
-is run in following situation,
+カテゴリディレクトリにあるテンプレートファイルが優先されます。たとえば、以下のような配置になっている状況で `notes new minutes weekly-meeting-2018-11-07` を実行した場合、
 
 ```
 HOME
 ├── .template.md
 └── minutes
     └── .template.md
+
 ```
 
-`HOME/minutes/.template.md` is used rather than `HOME/.template.md`.
+`HOME/.template.md` ではなく、`HOME/minutes/.template.md` が使用されます。
 
+### Gitリポジトリにメモを保存する
 
-### Save notes to Git repository
-
-Finally you can save your notes as revision of Git repository.
+最後に、メモをGitリポジトリのリビジョンとして保存することができます。
 
 ```
 $ notes save
-```
-
-It saves all your notes under your `notes-cli` directory as Git repository.
-It adds all changes in notes and automatically creates commit.
-
-By default, it only adds and commits your notes to the repository. But if you set `origin` remote to
-the repository, it automatically pushes the notes to the remote.
-
-For more details, please see `notes save --help`.
-
-
-### Configure behavior with environment variables
-
-As described above, some behavior can be configurable with environment variables. Here is a table of
-all environment variables affecting behavior of `notes`. Variables starting with `$NOTES_` are dedicated
-for `notes` command. Others are general environment variables affecting `notes` behavior.
-When you want to disable integration of Git, an editor or a pager, please set empty string to the
-corresponding environment variable like `export NOTES_CLI_PAGER=`.
-
-| Name                | Default                                    | Description                                                                |
-|---------------------|--------------------------------------------|----------------------------------------------------------------------------|
-| `$NOTES_CLI_HOME`   | `notes-cli` under [XDG data dir][xdg-dirs] | Home directory of `notes`. All notes are stored in sub directories         |
-| `$NOTES_CLI_EDITOR` | None                                       | Your favorite editor command. It can contain options like `"vim -g"`       |
-| `$NOTES_CLI_GIT`    | `"git"`                                    | Git command path. It is used for saving notes as Git repository            |
-| `$NOTES_CLI_PAGER`  | `"less -R -F -X"`                          | Pager command for paging long output from `notes list`                     |
-| `$XDG_DATA_HOME`    | None                                       | When `$NOTES_CLI_HOME` is not set, it is used for home                     |
-| `$APPLOCALDATA`     | None                                       | Even if `$XDG_DATA_HOME` is not set, it is used for home on Windows        |
-| `$EDITOR`           | None                                       | When `$NOTES_CLI_EDITOR` is not set, it is referred to pick editor command |
-| `$PAGER`            | None                                       | When `$NOTES_CLI_PAGER` is not set, it is referred to pick pager command   |
-
-You can see the configurations by `notes config` command.
-
-
-### Extend `notes` command by adding new subcommands
-
-Yes. Like [Git](https://git-scm.com/), `notes` command tries to run external subcommands when user
-specifies unknown subcommand. For example, when entering `notes foo`, `notes` command notices that
-it is not a built-in subcommand. Then it attempts to execute `notes-foo` with the same arguments.
-
-Following arguments are passed to underlying external subcommand:
 
 ```
-{full path to notes} {global options...} {subcommand} {local options...}
+
+これにより、`notes-cli` ディレクトリ以下のすべてのメモがGitリポジトリとして保存されます。メモのすべての変更がステージング（add）され、自動的にコミットが作成されます。
+
+デフォルトでは、リポジトリへの追加とコミットのみを行います。ただし、リポジトリにリモート（`origin`）を設定している場合は、自動的にリモートへメモがプッシュ（push）されます。
+
+詳細については、`notes save --help` を参照してください。
+
+### 環境変数で動作を設定する
+
+前述の通り、いくつかの動作は環境変数で設定可能です。以下は `notes` の動作に影響を与えるすべての環境変数の一覧です。`$NOTES_` で始まる変数は `notes` コマンド専用のものです。その他は `notes` の動作に影響を与える一般的な環境変数です。
+Git、エディタ、またはページャーとの連携を無効にしたい場合は、`export NOTES_CLI_PAGER=` のように、対応する環境変数に空文字列を設定してください。
+
+| 変数名 | デフォルト値 | 説明 |
+| --- | --- | --- |
+| `$NOTES_CLI_HOME` | [XDG data dir](https://wiki.archlinux.org/index.php/XDG_Base_Directory) 配下の `notes-cli` | `notes` のホームディレクトリ。すべてのメモはこのサブディレクトリ内に保存されます。 |
+| `$NOTES_CLI_EDITOR` | なし | お気に入りのエディタコマンド。`"vim -g"` のようなオプションを含めることができます。 |
+| `$NOTES_CLI_GIT` | `"git"` | Gitコマンドのパス。メモをGitリポジトリとして保存するために使用されます。 |
+| `$NOTES_CLI_PAGER` | `"less -R -F -X"` | `notes list` からの長い出力をページングするためのページャーコマンド。 |
+| `$XDG_DATA_HOME` | なし | `$NOTES_CLI_HOME` が設定されていない場合、ホームとして使用されます。 |
+| `$APPLOCALDATA` | なし | Windows環境において `$XDG_DATA_HOME` が設定されていない場合でも、ホームとして使用されます。 |
+| `$EDITOR` | なし | `$NOTES_CLI_EDITOR` が設定されていない場合、エディタコマンドを選択するために参照されます。 |
+| `$PAGER` | なし | `$NOTES_CLI_PAGER` が設定されていない場合、ページャーコマンドを選択するために参照されます。 |
+
+設定内容は `notes config` コマンドで確認できます。
+
+### 新しいサブコマンドを追加して `notes` コマンドを拡張する
+
+拡張可能です。[Git](https://git-scm.com/) と同様に、`notes` コマンドはユーザーが未定義のサブコマンドを指定した際、外部のサブコマンドを実行しようと試みます。たとえば、`notes foo` と入力すると、`notes` コマンドはそれが組み込みのサブコマンドではないことを認識します。そして、同じ引数を使って `notes-foo` を実行しようとします。
+
+実行される外部サブコマンドには、以下の引数が渡されます。
+
+```
+{notesへのフルパス} {グローバルオプション...} {サブコマンド} {ローカルオプション...}
+
 ```
 
-For example, let's say following script is put in your `$PATH` as `notes-hello`.
+たとえば、あなたの `$PATH` が通っている場所に、`notes-hello` という名前で以下のスクリプトが置かれているとします。
 
 ```sh
 #!/bin/sh
 echo "Hello! $*"
+
 ```
 
-And hit `notes hello`. It outputs `Hello! /path/to/bin/notes hello` since given argument `hello` is
-simply passed to executed underlying subcommand with full path of `notes`.
-So, when hit `notes --no-color hello --foo`, it outputs `Hello! /path/to/bin/notes --no-color hello --foo`.
-By forwarding all arguments, subcommand can refer global options specified before subcommand.
+ここで `notes hello` を実行すると、指定した引数 `hello` が、`notes` のフルパスとともに実行された外部サブコマンドへそのまま渡されるため、`Hello! /path/to/bin/notes hello` と出力されます。
+したがって、`notes --no-color hello --foo` を実行した場合は、`Hello! /path/to/bin/notes --no-color hello --foo` と出力されます。
+すべての引数が転送されるため、サブコマンド側で、サブコマンドの前に指定されたグローバルオプションを参照することができます。
 
-This external subcommand support is useful when you want to extend `notes` functionality to fit your
-usage. For example:
+この外部サブコマンドのサポートは、自分の用途に合わせて `notes` の機能を拡張したい場合に便利です。たとえば以下のような使い方ができます。
 
-- You can create your own command to upload your blog notes to your blog services.
-- You can create your own alias command like `ls -o -s modified` -> `lsmod`.
+* ブログのメモをブログサービスにアップロードするための独自コマンドを作成する。
+* `ls -o -s modified` を `lsmod` のように呼び出す独自のエイリアスコマンドを作成する。
 
+### シェルでの補完
 
-### Shell Completions
+* **zsh の場合：**
 
-- For zsh:
-
-Please put `_notes` completion script to your completion directory.
+補完スクリプト `_notes` を、お使いの補完ディレクトリに配置してください。
 
 ```
 $ git clone https://github.com/rhysd/notes-cli.git
 $ cp nodes-cli/completions/zsh/_notes /path/to/completion/dir/
+
 ```
 
-The completion directory must be listed in `$fpath`.
+配置する補完ディレクトリは `$fpath` に登録されている必要があります。
 
 ```
 fpath=(/path/to/completion/dir $fpath)
+
 ```
 
-- For bash:
+* **bash の場合：**
 
-Please add following line to your `.bashrc`.
+お使いの `.bashrc` に以下の行を追加してください。
 
 ```
 $ eval "$(notes --completion-script-bash)"
+
 ```
 
-- For fish:
+* **fish の場合：**
 
-Please add the completion script under `completions/fish/` to your completions directory.
+`completions/fish/` 配下にある補完スクリプトを、お使いの補完ディレクトリにコピーしてください。
 
 ```
 $ git clone https://github.com/rhysd/notes-cli.git
 $ cp nodes-cli/completions/fish/notes.fish ~/.config/fish/completions/
+
 ```
 
+### man マニュアルの設定
 
-### Setup `man` manual
-
-`notes` command can generate `man` manual file.
+`notes` コマンドは `man` マニュアルファイルを生成することができます。
 
 ```
 $ notes --help-man > /usr/local/share/man/man1/notes.1
+
 ```
 
+### ツール自体のアップデート
 
-### Update itself
-
-`notes` has the ability to update the executable by itself.
+`notes` は、実行ファイル自体を自動アップデートする機能を備えています。
 
 ```
 $ notes selfupdate
+
 ```
 
-Before updating, you can only check if the latest version is available by `--dry` option.
+アップデートを行う前に、`--dry` オプションを使用して最新バージョンが利用可能かどうかだけをチェックすることもできます。
 
+### Goプログラムから使用する
 
-### Use from Go program
-
-This command can be used from Go program as a library. Please read [API documentation][doc] to know
-the interfaces.
-
-
+このコマンドは、Goプログラムからライブラリとして使用することができます。インターフェースの詳細については、[APIドキュメント](http://godoc.org/github.com/rhysd/notes-cli) をお読みください。
 
 ## FAQ
 
-### Can I specify `/path/to/dir` as home?
+### `/path/to/dir` のような任意のパスをホームに指定できますか？
 
-Please set it to environment variable.
+環境変数にそのパスを設定してください。
 
 ```sh
 export NOTES_CLI_HOME=/path/to/dir
+
 ```
 
+### メモを grep するにはどうすればよいですか？
 
-### How can I grep notes?
-
-Please combine grep tools with `notes list` on your command line. For example,
+コマンドライン上で、`notes list` と grep ツールを組み合わせてください。たとえば、以下のようになります。
 
 ```sh
 $ grep -E some word $(notes list)
 $ ag some word $(notes list)
+
 ```
 
-If you want to filter with categories or tags, please use `-c` and/or `-t` of `list` command.
+カテゴリやタグでフィルタリングしたい場合は、`list` コマンドの `-c` や `-t` オプションを使用してください。
 
+### 対話的にメモをフィルタリングしてエディタで開くにはどうすればよいですか？
 
-### How can I filter notes interactively and open it with my editor?
-
-Please pipe the list of paths from `notes list`. Following is an example with `peco` and Vim.
+`notes list` からのパスのリストをパイプで渡してください。以下は `peco` と Vim を使用した例です。
 
 ```sh
 $ notes list | peco | xargs -o vim --not-a-term
+
 ```
 
+### リストから選択せずに、最新のメモを開くことはできますか？
 
-### Can I open the latest note without selecting it from list?
-
-Output of `notes list` is sorted by created date time by default. By using `head` command, you can
-choose the latest note in the list.
+`notes list` の出力は、デフォルトで作成日時の順にソートされています。`head` コマンドを使用することで、リスト内の最新のメモを選択できます。
 
 ```sh
 $ vim "$(notes list | head -1)"
+
 ```
 
-If you want to access to the last modified note, sorting by `modified` and taking first item by `head`
-should work.
+最後に変更されたメモにアクセスしたい場合は、`modified`（更新日時）でソートし、`head` で最初の項目を取得すれば機能します。
 
 ```sh
 $ vim "$(notes list --sort modified | head -1)"
+
 ```
 
-By giving `--sort` (or `-s`) option to `notes list`, you can change how to sort. Please see
-`notes list --help` for more details.
+`notes list` に `--sort`（または `-s`）オプションを渡すことで、ソート方法を変更できます。詳細については `notes list --help` を参照してください。
 
+### メモを削除するにはどうすればよいですか？
 
-### How can I remove some notes?
-
-Please use `rm` and `notes list`. Following is an example that all notes of specific category `foo`
-are removed.
+`rm` と `notes list` を使用してください。以下は、特定のカテゴリ `foo` のすべてのメモを削除する例です。
 
 ```sh
 $ rm $(notes list -c foo)
+
 ```
 
-Thanks to Git repository, this does not remove your notes completely until you run `notes save`
-next time.
+Gitリポジトリ機能のおかげで、次に `notes save` を実行するまでは、メモが完全に削除されることはありません。
 
+### メモ内にメタデータを表示したくありません。隠すことはできますか？
 
-### I don't want to show the metadata in note. Can I hide them?
-
-Metadata can be commented out as follows:
+以下のように、メタデータをコメントアウトすることができます。
 
 ```markdown
 some title
 ==========
-<!--
-- Category: cat
-- Tags:
-- Created: 2018-11-09T02:14:27+09:00
--->
-
-Body
-```
-
-The closing comment `-->` is not included in note body. Commented metadata are not rendered and read
-only by `notes` command.
-
-
-### Can I hide metadata by default?
-
-Yes. When `.template.md` starts with `-->` (closing comment), `notes` automatically consider that you
-expect to hide metadata and insert `<!--` proper position.
-
-For example, if you have `category1/.template.md`,
-
-```markdown
--->
+本文
 
 ```
 
-`notes new` will create a new note as follows:
+閉じコメント `-->` はメモの本文には含まれません。コメントアウトされたメタデータは（Markdownとしては）レンダリングされず、`notes` コマンドからのみ読み取られます。
+
+### デフォルトでメタデータを隠すことはできますか？
+
+可能です。`.template.md` が `-->`（閉じコメント）で始まっている場合、`notes` はユーザーがメタデータを隠すことを望んでいると自動的に判断し、適切な位置に ````
+
+`notes new` を実行すると、以下のように新しいメモが作成されます。
 
 ```markdown
 some-title
 ==========
-<!--
-- Category: category1
-- Tags:
-- Created: 2018-11-15T23:14:27+09:00
--->
 
 ```
 
+### 画像などのリソースはどのように管理されますか？
 
-### How image resources are managed?
+ホームディレクトリの下にリソース用のディレクトリを作成することをお勧めします。
 
-I recommend to create a directory for resources under home.
+Markdown 以外のすべてのリソースは `notes` コマンドによって無視されます。そのため、メモの Markdown ファイルと同じディレクトリに `.png` や `.jpg` ファイルを自由に配置できます。
 
-All non-markdown resources (are ignored by `notes` command. So you can freely put your `.png` or `.jpg`
-files in the same directory as note markdown files.
+あるいは、`HOME/images/` や `HOME/category1/images` のように、画像専用の独立したディレクトリを使用することもできます。`grep` を使用する際、同じディレクトリ内に大量の画像とメモファイルが混在しているよりも、この方法の方が適している場合があります。
 
-Or you can use a separate directory dedicated for images like `HOME/images/` or `HOME/category1/images`.
-This option may be better than mixing many pictures and note files in the same directory when you use
-`grep`.
+画像ディレクトリを他のカテゴリディレクトリと区別したい場合は、カテゴリディレクトリの名前に `.` プレフィックスを付けることができない特性を利用して、`HOME/.images` のように `.` プレフィックスを付けてください。
 
-If you want to differentiate images directory from other category directories, please give `.` prefix
-like `HOME/.images` since category directories cannot have `.` prefix as their names.
+### デフォルトで `--color-always` を使用することは可能ですか？
 
-
-### Is it possible to use `--color-always` by default?
-
-Please use shell's alias feature as follows:
+以下のように、シェルのエイリアス機能を使用してください。
 
 ```sh
 alias notes='notes --color-always'
-```
-
-
-### How can I migrate from [memolist.vim](https://github.com/glidenote/memolist.vim)?
-
-Please try [migration script](./scripts/migrate-from-memolist.rb).
 
 ```
-$ git clone https://github.com/rhysd/notes-cli.git
+
+### [memolist.vim](https://github.com/glidenote/memolist.vim) から移行するにはどうすればよいですか？
+
+[移行スクリプト](./scripts/migrate-from-memolist.rb) を試してみてください。
+
+```
+$ git clone [https://github.com/rhysd/notes-cli.git](https://github.com/rhysd/notes-cli.git)
 $ cd ./notes-cli
 $ ruby ./scripts/migrate-from-memolist.rb /path/to/memolist/dir /path/to/note-cli/home
+
 ```
 
+### Vim と統合（連携）するにはどうすればよいですか？
 
-### How can I integrate with Vim?
+[notes-cli 用の Vim プラグイン](https://github.com/rhysd/vim-notes-cli) を試すことができます。
 
-You can try [Vim plugin for notes-cli](https://github.com/rhysd/vim-notes-cli)
-
-If you feel the plugin is too much, you can also try following configuration. Please write following
-code in your `.vimrc`.
+プラグインを入れるのが大げさだと感じる場合は、以下の設定を試すこともできます。お使いの `.vimrc` に以下のコードを記述してください。
 
 ```vim
 function! s:notes_grep(args) abort
     let idx = match(a:args, '\s\+\ze/[^/]\+/')
     if idx <= 0
-        " When :NotesGrep /pat/
+        " :NotesGrep /pat/ の場合
         let paths = join(split(system('notes list'), '\n'), ' ')
         execute 'vimgrep' a:args paths
         return
     endif
 
-    " When :NotesGrep {args} /pat/
+    " :NotesGrep {args} /pat/ の場合
     let paths = join(split(system('notes list ' . a:args[:idx]), '\n'), ' ')
     if paths ==# ''
         echohl ErrorMsg | echo 'No file found' | echohl None
@@ -665,35 +607,13 @@ function s:notes_last_mod(args) abort
     execute 'edit!' last
 endfunction
 command! -nargs=* NotesLastMod call <SID>notes_last_mod(<q-args>)
+
 ```
 
-- `:NotesGrep [args] /pat/`: It searches notes by `:vimgrep` with given `/pat/`. Thanks to `:vimgrep`,
-  the search result is stored to a quickfix list. You can easily check matches and open the file from
-  the list by open quickfix window with `:copen`.
-- `:NotesNew [args]`: It creates a new note and opens it with a new buffer. `args` is the same as
-  `notes new` but category and file name can be empty. In the case, Vim ask you to input them after
-  starting the command.
-- `:NotesLastMod [args]`: It opens the last modified note in new buffer. When `args` is given, it
-  is passed to underlying `notes list` command execution so you can filter result by categories
-  and/or tags with `-c` or `-t`.
+* `:NotesGrep [args] /pat/`: 指定された `/pat/` を使って `:vimgrep` でメモを検索します。`:vimgrep` のおかげで、検索結果はクイックフィックスリストに保存されます。`:copen` でクイックフィックスウィンドウを開くことで、一致した箇所を簡単に確認してリストからファイルを開くことができます。
+* `:NotesNew [args]`: 新しいメモを作成し、新しいバッファで開きます。`args` は `notes new` と同じですが、カテゴリとファイル名は空にすることができます。その場合、コマンドの開始後に Vim から入力を求められます。
+* `:NotesLastMod [args]`: 最後に変更されたメモを新しいバッファで開きます。`args` が指定された場合は、内部の `notes list` コマンドの実行に渡されるため、`-c` や `-t` を使ってカテゴリやタグで結果をフィルタリングできます。
 
-
-
-## License
+## ライセンス
 
 [MIT License](LICENSE.txt)
-
-
-
-
-[ag]: https://github.com/ggreer/the_silver_searcher
-[rg]: https://github.com/BurntSushi/ripgrep
-[fzf]: https://github.com/junegunn/fzf
-[peco]: https://github.com/peco/peco
-[xdg-dirs]: https://wiki.archlinux.org/index.php/XDG_Base_Directory
-[codecov-badge]: https://codecov.io/gh/rhysd/notes-cli/branch/master/graph/badge.svg
-[codecov]: https://codecov.io/gh/rhysd/notes-cli
-[doc-badge]: https://godoc.org/github.com/rhysd/notes-cli?status.svg
-[doc]: http://godoc.org/github.com/rhysd/notes-cli
-[github-actions-badge]: https://github.com/rhysd/notes-cli/workflows/CI/badge.svg?branch=master&event=push
-[github-actions]: https://github.com/rhysd/notes-cli/actions?query=workflow%3ACI
