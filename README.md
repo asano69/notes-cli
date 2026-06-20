@@ -3,6 +3,7 @@
 これは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。
 ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
 また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。
+このツールは、ObsidianとHugoとの互換性を重視しており、作成したノートを静的サイトにビルドすることができます。
 
 このツールは、`grep`（または [ag](https://github.com/ggreer/the_silver_searcher), [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) や [peco](https://github.com/peco/peco) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
 
