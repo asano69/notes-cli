@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# YAMLフロントマターのリストをカッコの中にいれる
+# Wrap YAML front matter lists in inline flow style (square brackets)
 """Convert YAML front matter block-style lists to inline flow style.
 
 Usage:
     python front_matter_flow.py file.md [file2.md ...]
     python front_matter_flow.py content/**/*.md
 """
-
 import sys
 import re
 from io import StringIO
@@ -39,16 +38,13 @@ def _convert(data):
 def _make_yaml():
     yaml = YAML()
     yaml.preserve_quotes = True
-
     # Keep timestamps as plain strings so dates are not reformatted
     yaml.constructor.yaml_constructors.pop('tag:yaml.org,2002:timestamp', None)
-
     # Represent None as empty (e.g. "summary: " not "summary: null")
     yaml.representer.add_representer(
         type(None),
         lambda d, _: d.represent_scalar('tag:yaml.org,2002:null', ''),
     )
-
     return yaml
 
 
@@ -57,7 +53,6 @@ def process_file(path: Path) -> bool:
     m = _FM_RE.match(text)
     if not m:
         return False
-
     yaml = _make_yaml()
     try:
         data = yaml.load(m.group(1))
@@ -66,12 +61,9 @@ def process_file(path: Path) -> bool:
         return False
     if not isinstance(data, dict):
         return False
-
     _convert(data)
-
     buf = StringIO()
     yaml.dump(data, buf)
-
     path.write_text(
         '---\n' + buf.getvalue().rstrip('\n') + '\n---\n' + text[m.end():],
         encoding='utf-8',
@@ -80,10 +72,14 @@ def process_file(path: Path) -> bool:
 
 
 def iter_targets(arg: str):
-    """Yield .md files from a path argument (file or directory)."""
+    """Yield .md files from a path argument (file or directory), skipping hidden directories."""
     p = Path(arg)
     if p.is_dir():
-        yield from sorted(p.rglob('*.md'))
+        for path in sorted(p.rglob('*.md')):
+            dirs = path.relative_to(p).parts[:-1]
+            if any(part.startswith('.') for part in dirs):
+                continue
+            yield path
     elif p.is_file():
         yield p
     else:
@@ -94,7 +90,6 @@ def main():
     if len(sys.argv) < 2:
         print('Usage: front_matter_flow.py <file.md|dir> [...]', file=sys.stderr)
         sys.exit(1)
-
     for arg in sys.argv[1:]:
         for p in iter_targets(arg):
             if process_file(p):

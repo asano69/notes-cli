@@ -5,8 +5,9 @@ Usage:
     python generate_hugo_sections.py <root_folder>
 
 For each folder found (including the root folder itself), an _index.md
-is written (overwriting any existing one) with the folder name used as
-both the title and the category.
+is written (overwriting any existing one). The title is the folder's
+own name; the category is its path relative to the root folder, with
+components joined by '/' (e.g. "Design/test").
 """
 
 import argparse
@@ -19,12 +20,21 @@ TEMPLATE = """---
 title: "{title}"
 summary:
 tags: []
-categories: [{title}]
+categories: [{category}]
 draft: false
 date: {date}
 lastmod: {date}
 ---
 """
+
+
+def category_for(current: Path, root: Path) -> str:
+    """Return the category path: folder names from root down to current, joined by '/'."""
+    rel = current.relative_to(root)
+    if rel == Path("."):
+        # The root folder itself has no parent within the tree, so it acts as its own category.
+        return current.name
+    return rel.as_posix()
 
 
 def generate_index_files(root: Path, date: str) -> None:
@@ -38,7 +48,8 @@ def generate_index_files(root: Path, date: str) -> None:
             continue
 
         index_file = current / "_index.md"
-        index_file.write_text(TEMPLATE.format(title=current.name, date=date), encoding="utf-8")
+        content = TEMPLATE.format(title=current.name, category=category_for(current, root), date=date)
+        index_file.write_text(content, encoding="utf-8")
         print(f"Wrote {index_file}")
 
 
@@ -50,9 +61,9 @@ def main() -> None:
     if not args.folder.is_dir():
         raise SystemExit(f"Error: {args.folder} is not a directory")
 
-    # Use midnight JST for the date, matching the existing front matter convention.
-    today = datetime.datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%dT00:00:00+09:00")
-    generate_index_files(args.folder, today)
+    # Use the current JST time, accurate to the second, matching the front matter convention.
+    now = datetime.datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(timespec="seconds")
+    generate_index_files(args.folder, now)
 
 
 if __name__ == "__main__":
