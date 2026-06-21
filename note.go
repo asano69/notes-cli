@@ -97,17 +97,22 @@ func (note *Note) Create() error {
 
 	var b bytes.Buffer
 
-	// Write YAML frontmatter in the new format.
-	// Fields: title, summary, tags, categories, draft, date, lastmod.
-	b.WriteString("---\n")
-	fmt.Fprintf(&b, "title: %s\n", title)
-	fmt.Fprintf(&b, "summary: \n")
-	fmt.Fprintf(&b, "tags: [%s]\n", strings.Join(note.Tags, ", "))
-	fmt.Fprintf(&b, "categories: [%s]\n", note.Category)
-	fmt.Fprintf(&b, "draft: \n")
-	fmt.Fprintf(&b, "date: %s\n", note.Created.Format(time.RFC3339))
-	fmt.Fprintf(&b, "lastmod: \n")
-	b.WriteString("---\n")
+	// Frontmatter is rendered from frontmatterSchema (see frontmatter.go), so
+	// the field set, order, and formatting (e.g. title/summary being quoted)
+	// stay in sync with what FixCmd produces.
+	b.WriteString(renderFrontmatter(
+		map[string]string{
+			"title":   title,
+			"summary": "",
+			"draft":   "",
+			"date":    note.Created.Format(time.RFC3339),
+			"lastmod": "",
+		},
+		map[string][]string{
+			"tags":       note.Tags,
+			"categories": {note.Category},
+		},
+	))
 	b.WriteRune('\n')
 
 	if len(template) > 0 {
@@ -133,6 +138,7 @@ func (note *Note) Create() error {
 	_, err = f.Write(b.Bytes())
 	return err
 }
+
 
 // Open opens the note using an editor command user set. When user did not set any editor command
 // with $NOTES_CLI_EDITOR, this method fails. Otherwise, an editor process is spawned with argument

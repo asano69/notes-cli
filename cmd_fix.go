@@ -164,9 +164,6 @@ func fixNoteFile(path, home string, dryRun bool) (bool, error) {
 	return true, nil
 }
 
-// frontmatterKeys lists the keys of the frontmatter schema notes-cli expects, in order.
-var frontmatterKeys = []string{"title", "summary", "tags", "categories", "draft", "date", "lastmod"}
-
 // frontmatterEntry is one top-level key of YAML frontmatter, together with
 // all of its raw lines: the "key: ..." line itself, plus any indented
 // continuation lines that follow it (block-style list items, or further
@@ -258,7 +255,7 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 		byKey[e.key] = e
 	}
 
-	lines := make([]string, 0, len(frontmatterKeys)+len(entries))
+	lines := make([]string, 0, len(frontmatterSchema)+len(entries))
 
 	// title: quoted string, derived from the file name when empty
 	title := ""
@@ -268,21 +265,21 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	if title == "" {
 		title = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}
-	lines = append(lines, "title: "+quote(title))
+	lines = append(lines, formatFrontmatterField(quotedField, "title", title, nil))
 
 	// summary: quoted string, left empty when unset
 	summary := ""
 	if e, ok := byKey["summary"]; ok {
 		summary = unquote(e.scalarValue())
 	}
-	lines = append(lines, "summary: "+quote(summary))
+	lines = append(lines, formatFrontmatterField(quotedField, "summary", summary, nil))
 
 	// tags: inline list, no derivation when empty
 	tags, err := listItemsOf(byKey, "tags")
 	if err != nil {
 		return nil, err
 	}
-	lines = append(lines, "tags: ["+strings.Join(tags, ", ")+"]")
+	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
 	// categories: inline list, derived from the note's directory when empty
 	categories, err := listItemsOf(byKey, "categories")
@@ -294,7 +291,7 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 			categories = []string{c}
 		}
 	}
-	lines = append(lines, "categories: ["+strings.Join(categories, ", ")+"]")
+	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
 
 	// draft: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "draft")...)
@@ -307,11 +304,10 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	if date == "" {
 		date = time.Now().Format(time.RFC3339)
 	}
-	lines = append(lines, "date: "+date)
+	lines = append(lines, formatFrontmatterField(rawField, "date", date, nil))
 
 	// lastmod: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "lastmod")...)
-
 	// Any key outside the known schema is preserved verbatim, in its
 	// original order, after the known keys above.
 	for _, e := range entries {
@@ -348,8 +344,8 @@ func untouchedOrDefault(byKey map[string]frontmatterEntry, key string) []string 
 
 // isFrontmatterKey reports whether key is part of the known frontmatter schema.
 func isFrontmatterKey(key string) bool {
-	for _, k := range frontmatterKeys {
-		if k == key {
+	for _, f := range frontmatterSchema {
+		if f.key == key {
 			return true
 		}
 	}
