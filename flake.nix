@@ -1,5 +1,5 @@
 # notes-cli/flake.nix
-#  nix build "github:asano69/notes-cli/v0.0.5#default"
+#  nix build .
 {
   description = "Forked notes-cli";
 
