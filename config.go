@@ -67,7 +67,7 @@ func homePath() (string, error) {
 func gitPath() string {
 	c := "git"
 	if env, ok := os.LookupEnv("NOTES_CLI_GIT"); ok {
-		c = env  // filepath.Clean を削除 — 不要なパス正規化も避ける
+		c = env // Removed filepath.Clean here — avoid unnecessary path normalization
 	}
 
 	// Use LookPath only to check availability. Return the command name as-is
@@ -79,7 +79,7 @@ func gitPath() string {
 		return ""
 	}
 
-	return c  // exe（絶対パス）ではなく c（コマンド名）を返す
+	return c // Return c (command name), not the resolved absolute path
 }
 
 func editorCmd() string {
