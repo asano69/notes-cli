@@ -116,9 +116,9 @@ $ notes new blog how-to-handle-files golang,file
 
 ```markdown
 ---
-title: Hello World!
-summary: Hugo is a static site generator written in Go. It converts Markdown 
-  files into HTML with remarkable speed.
+title: "Hello World!"
+summary: "Hugo is a static site generator written in Go. It converts Markdown 
+  files into HTML with remarkable speed."
 tags: [golang, hugo]
 categories: [wiki]
 draft:
@@ -131,9 +131,9 @@ lastmod: 2026-06-19T17:48:41+09:00
 
 ```markdown
 ---
-title: Hello World!
-summary: Hugo is a static site generator written in Go. It converts Markdown 
-  files into HTML with remarkable speed.
+title: "Hello World!"
+summary: "Hugo is a static site generator written in Go. It converts Markdown 
+  files into HTML with remarkable speed."
 tags: [golang, hugo]
 categories: [wiki]
 draft:
