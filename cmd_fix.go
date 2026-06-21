@@ -31,8 +31,10 @@ import (
 // Missing keys are added with their default value. An unquoted 'title' or
 // 'summary' is wrapped in double quotes. Block-style 'tags'/'categories'
 // lists are converted to the inline '[...]' style. An empty 'title' is
-// derived from the file name, an empty 'categories' from the note's
-// directory relative to home, and an empty 'date' from the current time.
+// derived from the file name, and an empty 'date' from the current time.
+// 'categories' is always reconciled against the note's actual directory
+// relative to home, overwriting a missing or mismatched value so `notes`
+// can locate the note again.
 // 'draft' and 'lastmod' are never modified, only added when missing. A note
 // whose frontmatter cannot be repaired automatically is reported instead of
 // being changed.
@@ -281,17 +283,22 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	}
 	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
-	// categories: inline list, derived from the note's directory when empty
-	categories, err := listItemsOf(byKey, "categories")
-	if err != nil {
-		return nil, err
+// categories: inline list. The note's actual directory (relative to
+// home) is the source of truth, since that's what `notes` uses to find
+// the note again. If the first element is missing or doesn't match it,
+// it's replaced with a single-element list derived from the directory.
+// Extra elements beyond the first are otherwise left untouched, since
+// `notes` itself never reads them.
+categories, err := listItemsOf(byKey, "categories")
+if err != nil {
+	return nil, err
+}
+if dirCat, err := relativeCategory(path, home); err == nil && dirCat != "" {
+	if len(categories) == 0 || categories[0] != dirCat {
+		categories = []string{dirCat}
 	}
-	if len(categories) == 0 {
-		if c, err := relativeCategory(path, home); err == nil && c != "" {
-			categories = []string{c}
-		}
-	}
-	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
+}
+ 	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
 
 	// draft: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "draft")...)
