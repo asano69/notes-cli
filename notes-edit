@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+    notes ls -ro |
+        awk '{print $1 "\t" $0}' |
+        fzf --delimiter="\t" --with-nth=2 \
+            --preview="bat --color=always $NOTES_CLI_HOME/{1}" \
+            --preview-window=up:60% |
+        awk -F'\t' '{print $1}' |
+        xargs -I{} $EDITOR "$NOTES_CLI_HOME/{}"
+
