@@ -26,14 +26,14 @@ notes-cliは、ターミナル上でお気に入りのエディタを使って�
 NixOSの場合、flakeをつかってビルドすることもできますが、更新がむずかしく推奨されません。
 
 ```
-$ go install github.com/rhysd/notes-cli/cmd/notes
+$ go install github.com/asano69/notes-cli/cmd/notes
 
 ```
 
 実際に使い始める前に、サンプルを使って試すことができます。
 
 ```sh
-$ git clone https://github.com/rhysd/notes-cli.git
+$ git clone https://github.com/asano69/notes-cli.git
 $ cd notes-cli/
 $ export NOTES_CLI_HOME="$(pwd)/example/notes-cli"
 $ export NOTES_CLI_EDITOR=vim # お気に入りのエディタを設定
