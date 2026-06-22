@@ -99,3 +99,20 @@ func (cmd *AddTagCmd) addToCategory(category, tag string) error {
 	}
 	return nil
 }
+
+// mergeTags returns existing tags with newTags appended, deduplicating by name.
+func mergeTags(existing, add []string) []string {
+	seen := make(map[string]struct{}, len(existing))
+	result := make([]string, 0, len(existing)+len(add))
+	for _, t := range existing {
+		seen[t] = struct{}{}
+		result = append(result, t)
+	}
+	for _, t := range add {
+		if _, ok := seen[t]; !ok {
+			seen[t] = struct{}{}
+			result = append(result, t)
+		}
+	}
+	return result
+}

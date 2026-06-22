@@ -78,27 +78,7 @@ func runFzf(cfg *Config, input string, opts fzfOptions) ([]string, error) {
 	return result, nil
 }
 
-// runFzfLines runs fzf over arbitrary line input (e.g. a list of tag names)
-// and returns the selected lines. Useful for the tag selection step.
-func runFzfLines(cfg *Config, lines []string, opts fzfOptions) ([]string, error) {
-	cmdline, err := shellquote.Split(cfg.FzfCmd)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot parse fzf command ($NOTES_CLI_FZF / fzf_cmd)")
-	}
 
-	args := cmdline[1:]
-	if opts.Multi {
-		args = append(args, "--multi")
-	}
-	if opts.Prompt != "" {
-		args = append(args, "--prompt="+opts.Prompt)
-	}
-	if opts.Header != "" {
-		args = append(args, "--header="+opts.Header)
-	}
-
-	return runFzfRaw(cmdline[0], args, strings.Join(lines, "\n"))
-}
 
 // runFzfRaw is the low-level fzf runner. It pipes input to fzf, captures
 // stdout, and returns non-empty selected lines. Exit codes 1 and 130 (no
