@@ -3,5 +3,5 @@
 /notes-cli
 /result
 /result/
-vendor/
+#vendor/
 .direnv/
