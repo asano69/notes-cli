@@ -10,7 +10,7 @@ import (
 
 // Note: External command name must consist of alphabets, numbers, dash '-' and underscore '_'.
 var (
-	reExtractCmdName = regexp.MustCompile(`^expected command but got "([[:alnum:]_-]+)"$`)
+	reExtractCmdName = regexp.MustCompile(`^unexpected argument ([[:alnum:]_-]+)$`)
 )
 
 // ExternalCmd represents user-defined subcommand
@@ -38,7 +38,7 @@ func (cmd *ExternalCmd) Do() error {
 }
 
 // NewExternalCmd creates ExternalCmd instance from given error and arguments. The error must be parse
-// error of kingpin.Parse(). When the missing subcommand is not detected in the error message, this
+// error of kong.Parse(). When the missing subcommand is not detected in the error message, this
 // function returns false as 2nd return value
 func NewExternalCmd(fromErr error, args []string) (*ExternalCmd, bool) {
 	match := reExtractCmdName.FindSubmatch([]byte(fromErr.Error()))

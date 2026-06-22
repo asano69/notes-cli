@@ -7,7 +7,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-runewidth"
 	"github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"path/filepath"
 	"regexp"
@@ -24,9 +23,8 @@ var (
 // ListCmd represents `notes list` command. Each public fields represent options of the command
 // Out field represents where this command should output.
 type ListCmd struct {
-	cli, cliAlias *kingpin.CmdClause
-	out           io.Writer
-	Config        *Config
+	out    io.Writer
+	Config *Config
 	// Full is a flag equivalent to --full
 	Full bool
 	// Category is a regex string equivalent to --cateogry
@@ -43,27 +41,6 @@ type ListCmd struct {
 	Edit bool
 	// Out is a writer to write output of this command. Kind of stdout is expected
 	Out io.Writer
-}
-
-func (cmd *ListCmd) defineListCLI(c *kingpin.CmdClause) {
-	c.Flag("full", "Show list of full information of note (full path, metadata, title, body (up to 10 lines)) instead of file path").Short('f').BoolVar(&cmd.Full)
-	c.Flag("category", "Filter list by category name with regular expression").Short('c').StringVar(&cmd.Category)
-	c.Flag("tag", "Filter list by tag name with regular expression").Short('t').StringVar(&cmd.Tag)
-	c.Flag("relative", "Show relative paths from $NOTES_CLI_HOME directory").Short('r').BoolVar(&cmd.Relative)
-	c.Flag("oneline", "Show oneline information of note (relative path, category, tags, title) instead of file path").Short('o').BoolVar(&cmd.Oneline)
-	c.Flag("sort", "Sort list by 'modified', 'created', 'filename' or 'category'. Default is 'created'").Short('s').EnumVar(&cmd.SortBy, "modified", "created", "filename", "category")
-	c.Flag("edit", "Open listed notes with your favorite editor. $NOTES_CLI_EDITOR must be set. Paths of listed notes are passed to the editor command's arguments").Short('e').BoolVar(&cmd.Edit)
-}
-
-func (cmd *ListCmd) defineCLI(app *kingpin.Application) {
-	cmd.cli = app.Command("list", "List notes with filtering by categories and/or tags with regular expressions. By default, it shows full path of notes (alias: ls)")
-	cmd.defineListCLI(cmd.cli)
-	cmd.cliAlias = app.Command("ls", "List notes with filtering by categories and/or tags with regular expressions. By default, it shows full path of notes ").Hidden()
-	cmd.defineListCLI(cmd.cliAlias)
-}
-
-func (cmd *ListCmd) matchesCmdline(cmdline string) bool {
-	return cmd.cli.FullCommand() == cmdline || cmd.cliAlias.FullCommand() == cmdline
 }
 
 func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
