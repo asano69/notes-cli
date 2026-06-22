@@ -1,7 +1,5 @@
 package notes
 
-import ()
-
 // EditCmd represents `notes edit` command.
 // It opens an interactive fzf picker and opens the selected note in the editor.
 type EditCmd struct {

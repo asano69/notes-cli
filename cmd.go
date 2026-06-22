@@ -1,6 +1,7 @@
 package notes
 
 import (
+	"io"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -96,6 +97,50 @@ type editCommand struct {
 	Tag      string `short:"t" help:"Filter by tag name with regular expression"`
 }
 
+func (cmd *newCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &NewCmd{Config: c, Category: cmd.Category, Filename: cmd.Filename, Tags: cmd.Tags, NoInline: cmd.NoInline, NoEdit: cmd.NoEdit}
+}
+
+func (cmd *listCommand) runtimeCmd(c *Config, out io.Writer) Cmd {
+	return &ListCmd{Config: c, Out: out, Full: cmd.Full, Category: cmd.Category, Tag: cmd.Tag, Relative: cmd.Relative, Oneline: cmd.Oneline, SortBy: cmd.SortBy, Edit: cmd.Edit}
+}
+
+func (cmd *categoriesCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &CategoriesCmd{Config: c, Out: os.Stdout}
+}
+
+func (cmd *tagsCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &TagsCmd{Config: c, Out: os.Stdout, Category: cmd.Category}
+}
+
+func (cmd *tagModCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &TagModCmd{Config: c, From: cmd.From, To: cmd.To, Force: cmd.Force}
+}
+
+func (cmd *tagAddCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &AddTagCmd{Config: c, Tag: cmd.Tag, Target: cmd.Target}
+}
+
+func (cmd *saveCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &SaveCmd{Config: c, Message: cmd.Message}
+}
+
+func (cmd *configCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &ConfigCmd{Config: c, Out: os.Stdout, Name: cmd.Name}
+}
+
+func (cmd *fixCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &FixCmd{Config: c, Out: os.Stdout, DryRun: cmd.DryRun}
+}
+
+func (cmd *editCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &EditCmd{Config: c, Category: cmd.Category, Tag: cmd.Tag}
+}
+
+type commandConfig interface {
+	runtimeCmd(*Config, io.Writer) Cmd
+}
+
 // ParseCmd parses given arguments as command line options and returns corresponding subcommand instance.
 // When no subcommand matches or argus contains invalid argument, it returns an error
 func ParseCmd(args []string) (Cmd, error) {
@@ -146,28 +191,16 @@ func ParseCmd(args []string) (Cmd, error) {
 		color.NoColor = true
 	}
 
-	switch ctx.Command() {
-	case "new <category> <filename> [<tags>]":
-		return &NewCmd{Config: c, Category: cli.New.Category, Filename: cli.New.Filename, Tags: cli.New.Tags, NoInline: cli.New.NoInline, NoEdit: cli.New.NoEdit}, nil
-	case "list", "ls", "list ls":
-		return &ListCmd{Config: c, Out: colorStdout, Full: cli.List.Full, Category: cli.List.Category, Tag: cli.List.Tag, Relative: cli.List.Relative, Oneline: cli.List.Oneline, SortBy: cli.List.SortBy, Edit: cli.List.Edit}, nil
-	case "categories", "cats", "categories cats":
-		return &CategoriesCmd{Config: c, Out: os.Stdout}, nil
-	case "tags [<category>]":
-		return &TagsCmd{Config: c, Out: os.Stdout, Category: cli.Tags.Category}, nil
-	case "tagmod <from> [<to>]":
-		return &TagModCmd{Config: c, From: cli.TagMod.From, To: cli.TagMod.To, Force: cli.TagMod.Force}, nil
-	case "tagadd <tag> <target>":
-		return &AddTagCmd{Config: c, Tag: cli.TagAdd.Tag, Target: cli.TagAdd.Target}, nil
-	case "save":
-		return &SaveCmd{Config: c, Message: cli.Save.Message}, nil
-	case "config [<name>]":
-		return &ConfigCmd{Config: c, Out: os.Stdout, Name: cli.Config.Name}, nil
-	case "fix":
-		return &FixCmd{Config: c, Out: os.Stdout, DryRun: cli.Fix.DryRun}, nil
-	case "edit":
-		return &EditCmd{Config: c, Category: cli.Edit.Category, Tag: cli.Edit.Tag}, nil
-	default:
-		panic("FATAL: Unknown command: " + ctx.Command())
+	target := ctx.Selected().Target
+	if target.CanInterface() {
+		if cmd, ok := target.Interface().(commandConfig); ok {
+			return cmd.runtimeCmd(c, colorStdout), nil
+		}
 	}
+	if target.CanAddr() {
+		if cmd, ok := target.Addr().Interface().(commandConfig); ok {
+			return cmd.runtimeCmd(c, colorStdout), nil
+		}
+	}
+	panic("FATAL: Unknown command: " + ctx.Command())
 }
