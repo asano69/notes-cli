@@ -1,4 +1,4 @@
-module github.com/rhysd/notes-cli
+module github.com/asano69/notes-cli
 
 go 1.25.0
 

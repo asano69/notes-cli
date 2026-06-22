@@ -1,7 +1,7 @@
 # A small CLI note taking tool with your favorite editor
 
 > [!NOTE]
-> これは、[rhysd/notes-cli](https://github.com/rhysd/notes-cli/tree/master)のフォークです。
+> これは、MIT ライセンスの notes-cli をもとに独自にメンテナンスしているフォークです。
 
 notes-cliは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。  
 ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
@@ -388,7 +388,7 @@ echo "Hello! $*"
 補完スクリプト `_notes` を、お使いの補完ディレクトリに配置してください。
 
 ```
-$ git clone https://github.com/rhysd/notes-cli.git
+$ git clone https://github.com/asano69/notes-cli.git
 $ cp nodes-cli/completions/zsh/_notes /path/to/completion/dir/
 
 ```
@@ -414,7 +414,7 @@ $ eval "$(notes --completion-script-bash)"
 `completions/fish/` 配下にある補完スクリプトを、お使いの補完ディレクトリにコピーしてください。
 
 ```
-$ git clone https://github.com/rhysd/notes-cli.git
+$ git clone https://github.com/asano69/notes-cli.git
 $ cp nodes-cli/completions/fish/notes.fish ~/.config/fish/completions/
 
 ```
@@ -432,7 +432,7 @@ $ notes --help-man > /usr/local/share/man/man1/notes.1
 
 ### Goプログラムから使用する
 
-このコマンドは、Goプログラムからライブラリとして使用することができます。インターフェースの詳細については、[APIドキュメント](http://godoc.org/github.com/rhysd/notes-cli) をお読みください。
+このコマンドは、Goプログラムからライブラリとして使用することができます。インターフェースの詳細については、[APIドキュメント](http://godoc.org/github.com/asano69/notes-cli) をお読みください。
 
 ## FAQ
 
@@ -544,7 +544,7 @@ alias notes='notes --color-always'
 [移行スクリプト](./scripts/migrate-from-memolist.rb) を試してみてください。
 
 ```
-$ git clone [https://github.com/rhysd/notes-cli.git](https://github.com/rhysd/notes-cli.git)
+$ git clone [https://github.com/asano69/notes-cli.git](https://github.com/asano69/notes-cli.git)
 $ cd ./notes-cli
 $ ruby ./scripts/migrate-from-memolist.rb /path/to/memolist/dir /path/to/note-cli/home
 

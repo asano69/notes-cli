@@ -1,5 +1,5 @@
 <a name="v1.6.2"></a>
-# [v1.6.2](https://github.com/rhysd/notes-cli/releases/tag/v1.6.2) - 11 Apr 2020
+# [v1.6.2](https://github.com/asano69/notes-cli/releases/tag/v1.6.2) - 11 Apr 2020
 
 - **New:** Add Fish shell completion
 - **New:** `MismatchCategoryError` was added as error type
@@ -9,7 +9,7 @@
 
 
 <a name="v1.6.0"></a>
-# [v1.6.0](https://github.com/rhysd/notes-cli/releases/tag/v1.6.0) - 10 Dec 2018
+# [v1.6.0](https://github.com/asano69/notes-cli/releases/tag/v1.6.0) - 10 Dec 2018
 
 - **New:** `notes` with no argument now shows `notes ls -o` if any note exists
 - **Improve:** `list --full` output buffering
@@ -19,7 +19,7 @@
 
 
 <a name="v1.5.1"></a>
-# [v1.5.1](https://github.com/rhysd/notes-cli/releases/tag/v1.5.1) - 02 Dec 2018
+# [v1.5.1](https://github.com/asano69/notes-cli/releases/tag/v1.5.1) - 02 Dec 2018
 
 Allow to disable Git, editor or pager by setting empty to the corresponding environment variable.
 
@@ -33,7 +33,7 @@ export NOTES_CLI_PAGER=
 
 
 <a name="v1.5.0"></a>
-# [v1.5.0](https://github.com/rhysd/notes-cli/releases/tag/v1.5.0) - 25 Nov 2018
+# [v1.5.0](https://github.com/asano69/notes-cli/releases/tag/v1.5.0) - 25 Nov 2018
 
 - **New:** Do paging `list` command's long output using pager command. Default pager command is `less` and it can be customizable via `$NOTES_CLI_PAGER`
 - **Improve:** Change layout of `list --oneline`. Category only field was removed and now category is unified with relative path. First field is not changed and category can be retrieved from the relative path. So this should not be breaking change
@@ -46,7 +46,7 @@ export NOTES_CLI_PAGER=
 
 
 <a name="v1.4.0"></a>
-# [v1.4.0](https://github.com/rhysd/notes-cli/releases/tag/v1.4.0) - 18 Nov 2018
+# [v1.4.0](https://github.com/asano69/notes-cli/releases/tag/v1.4.0) - 18 Nov 2018
 
 - **New:** Now category can be nested with `/` like `blog/myown` or `blog/dev.to`.
 - **New:** Allow to create an external subcommands like `git`. `notes-foo` in `$PATH` is called on `notes foo` with passing arguments and path to `notes` executable.
@@ -62,7 +62,7 @@ export NOTES_CLI_PAGER=
 
 
 <a name="v1.3.0"></a>
-# [v1.3.0](https://github.com/rhysd/notes-cli/releases/tag/v1.3.0) - 14 Nov 2018
+# [v1.3.0](https://github.com/asano69/notes-cli/releases/tag/v1.3.0) - 14 Nov 2018
 
 - **New:** Refer `$EDITOR` environment variable when `$NOTES_CLI_EDITOR` is not set
 - **Improve:** Allow `$NOTES_CLI_EDITOR` to have options such as `"vim -g"`. Previously only command and path could be specified like `"code"` or `"/path/to/emacs"`
@@ -73,7 +73,7 @@ export NOTES_CLI_PAGER=
 
 
 <a name="v1.2.0"></a>
-# [v1.2.0](https://github.com/rhysd/notes-cli/releases/tag/v1.2.0) - 09 Nov 2018
+# [v1.2.0](https://github.com/asano69/notes-cli/releases/tag/v1.2.0) - 09 Nov 2018
 
 - **New:** Enable to put a template file for notes per category
 - **New:** Enable to hide metadata by surrounding it with `<!-- ... -->` comment
@@ -85,7 +85,7 @@ export NOTES_CLI_PAGER=
 
 
 <a name="v1.1.2"></a>
-# [v1.1.2](https://github.com/rhysd/notes-cli/releases/tag/v1.1.2) - 06 Nov 2018
+# [v1.1.2](https://github.com/asano69/notes-cli/releases/tag/v1.1.2) - 06 Nov 2018
 
 - Fix getting the executable path on `selfupdate` command
 
@@ -99,7 +99,7 @@ $ ~/.go/bin/notes selfupdate
 
 
 <a name="v1.1.1"></a>
-# [v1.1.1](https://github.com/rhysd/notes-cli/releases/tag/v1.1.1) - 06 Nov 2018
+# [v1.1.1](https://github.com/asano69/notes-cli/releases/tag/v1.1.1) - 06 Nov 2018
 
 1. Validate category name as directory on `notes new`
 2. Ignore horizontal rules (`---`) after metadata
@@ -129,7 +129,7 @@ Shopping
 
 
 <a name="v1.1.0"></a>
-# [v1.1.0](https://github.com/rhysd/notes-cli/releases/tag/v1.1.0) - 04 Nov 2018
+# [v1.1.0](https://github.com/asano69/notes-cli/releases/tag/v1.1.0) - 04 Nov 2018
 
 - Add `--edit` to `list` subcommand
   - You can edit listed notes immediately without piping result to editor's argument
@@ -140,27 +140,27 @@ Shopping
 
 
 <a name="v1.0.0"></a>
-# [v1.0.0](https://github.com/rhysd/notes-cli/releases/tag/v1.0.0) - 03 Nov 2018
+# [v1.0.0](https://github.com/asano69/notes-cli/releases/tag/v1.0.0) - 03 Nov 2018
 
 First release :tada:
 
 Please see README and `notes help` to know how to use.
 
-https://github.com/rhysd/notes-cli/blob/master/README.md
+https://github.com/asano69/notes-cli/blob/master/README.md
 
 [Changes][v1.0.0]
 
 
-[v1.6.2]: https://github.com/rhysd/notes-cli/compare/v1.6.0...v1.6.2
-[v1.6.0]: https://github.com/rhysd/notes-cli/compare/v1.5.1...v1.6.0
-[v1.5.1]: https://github.com/rhysd/notes-cli/compare/v1.5.0...v1.5.1
-[v1.5.0]: https://github.com/rhysd/notes-cli/compare/v1.4.0...v1.5.0
-[v1.4.0]: https://github.com/rhysd/notes-cli/compare/v1.3.0...v1.4.0
-[v1.3.0]: https://github.com/rhysd/notes-cli/compare/v1.2.0...v1.3.0
-[v1.2.0]: https://github.com/rhysd/notes-cli/compare/v1.1.2...v1.2.0
-[v1.1.2]: https://github.com/rhysd/notes-cli/compare/v1.1.1...v1.1.2
-[v1.1.1]: https://github.com/rhysd/notes-cli/compare/v1.1.0...v1.1.1
-[v1.1.0]: https://github.com/rhysd/notes-cli/compare/v1.0.0...v1.1.0
-[v1.0.0]: https://github.com/rhysd/notes-cli/tree/v1.0.0
+[v1.6.2]: https://github.com/asano69/notes-cli/compare/v1.6.0...v1.6.2
+[v1.6.0]: https://github.com/asano69/notes-cli/compare/v1.5.1...v1.6.0
+[v1.5.1]: https://github.com/asano69/notes-cli/compare/v1.5.0...v1.5.1
+[v1.5.0]: https://github.com/asano69/notes-cli/compare/v1.4.0...v1.5.0
+[v1.4.0]: https://github.com/asano69/notes-cli/compare/v1.3.0...v1.4.0
+[v1.3.0]: https://github.com/asano69/notes-cli/compare/v1.2.0...v1.3.0
+[v1.2.0]: https://github.com/asano69/notes-cli/compare/v1.1.2...v1.2.0
+[v1.1.2]: https://github.com/asano69/notes-cli/compare/v1.1.1...v1.1.2
+[v1.1.1]: https://github.com/asano69/notes-cli/compare/v1.1.0...v1.1.1
+[v1.1.0]: https://github.com/asano69/notes-cli/compare/v1.0.0...v1.1.0
+[v1.0.0]: https://github.com/asano69/notes-cli/tree/v1.0.0
 
  <!-- Generated by changelog-from-release -->
