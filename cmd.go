@@ -58,7 +58,7 @@ type listCommand struct {
 	Tag      string `short:"t" help:"Filter list by tag name with regular expression"`
 	Relative bool   `short:"r" help:"Show relative paths from $NOTES_CLI_HOME directory"`
 	Oneline  bool   `short:"o" help:"Show oneline information of note (relative path, category, tags, title) instead of file path"`
-	SortBy   string `name:"sort" short:"s" enum:"modified,created,filename,category" help:"Sort list by 'modified', 'created', 'filename' or 'category'. Default is 'created'"`
+	SortBy   string `name:"sort" short:"s" enum:"modified,created,filename,category" default:"created" help:"Sort list by 'modified', 'created', 'filename' or 'category'. Default is 'created'"`
 	Edit     bool   `short:"e" help:"Open listed notes with your favorite editor. $NOTES_CLI_EDITOR must be set. Paths of listed notes are passed to the editor command's arguments"`
 }
 
