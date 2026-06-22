@@ -5,14 +5,12 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 // TagModCmd represents `notes tagmod` command. Each public fields represent options of the command.
 // It renames a tag across all notes when "To" is given, or deletes it when "To" is empty
 // (deletion requires the --force flag as a safety guard).
 type TagModCmd struct {
-	cli    *kingpin.CmdClause
 	Config *Config
 	// From is the tag name to rename or delete
 	From string
@@ -20,17 +18,6 @@ type TagModCmd struct {
 	To string
 	// Force is a flag equivalent to --force. It is required to delete a tag (when To is empty)
 	Force bool
-}
-
-func (cmd *TagModCmd) defineCLI(app *kingpin.Application) {
-	cmd.cli = app.Command("tagmod", "Rename or delete a tag across all notes")
-	cmd.cli.Arg("from", "Tag name to rename or delete").Required().StringVar(&cmd.From)
-	cmd.cli.Arg("to", "New tag name. When omitted, the 'from' tag is deleted instead of renamed").StringVar(&cmd.To)
-	cmd.cli.Flag("force", "Required to actually delete a tag when 'to' is omitted").Short('f').BoolVar(&cmd.Force)
-}
-
-func (cmd *TagModCmd) matchesCmdline(cmdline string) bool {
-	return cmd.cli.FullCommand() == cmdline
 }
 
 // renameOrDeleteTag returns a copy of tags with "from" renamed to "to" (or removed when to is
