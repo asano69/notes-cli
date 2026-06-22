@@ -28,8 +28,9 @@ notes is developed at https://github.com/rhysd/notes-cli. If you're seeing a bug
 please create a new issue. Pull requests are more than welcome.`
 
 type cliOptions struct {
-	NoColor     bool `help:"Disable color output"`
-	ColorAlways bool `short:"A" help:"Enable color output always"`
+	NoColor     bool             `help:"Disable color output"`
+	ColorAlways bool             `short:"A" help:"Enable color output always"`
+	Version     kong.VersionFlag `help:"Show version"`
 
 	New        newCommand        `cmd:"" help:"Create a new note with given category and file name"`
 	List       listCommand       `cmd:"" aliases:"ls" help:"List notes with filtering by categories and/or tags with regular expressions. By default, it shows full path of notes"`
@@ -123,7 +124,7 @@ func ParseCmd(args []string) (Cmd, error) {
 	parser, err := kong.New(&cli,
 		kong.Name("notes"),
 		kong.Description(description),
-		kong.Version(Version),
+		kong.Vars{"version": Version},
 	)
 	if err != nil {
 		return nil, err
