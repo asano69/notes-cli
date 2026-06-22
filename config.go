@@ -25,8 +25,6 @@ type Config struct {
 	// this value will be empty. When empty, some functionality which requires an editor to open note doesn't
 	// work
 	EditorCmd string
-	// PagerCmd is a command for paging output from 'list' subcommand. If $NOTES_CLI_PAGER is set, it is used.
-	PagerCmd string
 }
 
 func homePath() (string, error) {
@@ -83,19 +81,6 @@ func editorCmd() string {
 	return ""
 }
 
-func pagerCmd() string {
-	if env, ok := os.LookupEnv("NOTES_CLI_PAGER"); ok {
-		return env
-	}
-	if env, ok := os.LookupEnv("PAGER"); ok {
-		return env
-	}
-	if _, err := exec.LookPath("less"); err == nil {
-		return "less -R -F -X"
-	}
-	return ""
-}
-
 // NewConfig creates a new Config instance by looking the user's environment. GitPath and EditorPath
 // may be empty when proper configuration is not found. When home directory path cannot be located,
 // this function returns an error
@@ -114,6 +99,5 @@ func NewConfig() (*Config, error) {
 		HomePath:  h,
 		GitPath:   gitPath(),
 		EditorCmd: editorCmd(),
-		PagerCmd:  pagerCmd(),
 	}, nil
 }

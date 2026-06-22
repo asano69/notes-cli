@@ -23,11 +23,10 @@ var (
 // ListCmd represents `notes list` command. Each public fields represent options of the command
 // Out field represents where this command should output.
 type ListCmd struct {
-	out    io.Writer
 	Config *Config
 	// Full is a flag equivalent to --full
 	Full bool
-	// Category is a regex string equivalent to --cateogry
+	// Category is a regex string equivalent to --category
 	Category string
 	// Tag is a regex string equivalent to --tag
 	Tag string
@@ -35,7 +34,7 @@ type ListCmd struct {
 	Relative bool
 	// Oneline is a flag equivalent to --oneline
 	Oneline bool
-	// Tag is a string indicating how to sort the list. This value is equivalent to --sort option
+	// SortBy is a string indicating how to sort the list. This value is equivalent to --sort option
 	SortBy string
 	// Edit is a flag equivalent to --edit
 	Edit bool
@@ -79,7 +78,7 @@ func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
 // printOnelineNotes outputs notes as TSV with a header row. No color or
 // alignment is applied so the output is easy to consume in tools like nushell.
 func (cmd *ListCmd) printOnelineNotes(notes []*Note) error {
-	out := bufio.NewWriter(cmd.out)
+	out := bufio.NewWriter(cmd.Out)
 	fmt.Fprintln(out, "categories\tfilename\ttags\ttitle")
 	for _, note := range notes {
 		fmt.Fprintf(out, "%s\t%s\t%s\t%s\n",
@@ -107,7 +106,7 @@ func (cmd *ListCmd) printNotes(notes []*Note) error {
 	}
 
 	if cmd.Full {
-		out := bufio.NewWriter(cmd.out)
+		out := bufio.NewWriter(cmd.Out)
 		for _, note := range notes {
 			cmd.printNoteFullTo(out, note)
 		}
@@ -139,7 +138,7 @@ func (cmd *ListCmd) printNotes(notes []*Note) error {
 		}
 	}
 
-	_, err := cmd.out.Write(b.Bytes())
+	_, err := cmd.Out.Write(b.Bytes())
 	return err
 }
 
@@ -198,26 +197,5 @@ func (cmd *ListCmd) Do() error {
 		return nil
 	}
 
-	// Oneline outputs TSV directly to Out without a pager so the result is
-	// pipe-friendly for tools like nushell.
-	if cmd.Oneline || cmd.Config.PagerCmd == "" {
-		cmd.out = cmd.Out
-		return cmd.printNotes(notes)
-	}
-
-	pager, err := StartPagerWriter(cmd.Config.PagerCmd, cmd.Out)
-	if err != nil {
-		return err
-	}
-
-	cmd.out = pager
-	if err := cmd.printNotes(notes); err != nil {
-		if pager.Err != nil {
-			err = errors.Wrap(err, "Pager command did not run successfully")
-		}
-		return err
-	}
-
-	pager.Wait()
-	return errors.Wrap(pager.Err, "Pager command did not run successfully")
+	return cmd.printNotes(notes)
 }
