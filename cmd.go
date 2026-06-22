@@ -42,7 +42,6 @@ type cliOptions struct {
 	Save       saveCommand       `cmd:"" help:"Save notes using Git. It adds all notes and creates a commit to Git repository at home directory"`
 	Config     configCommand     `cmd:"" help:"Output config values to stdout. By default output all values with KEY=VALUE style"`
 	Fix        fixCommand        `cmd:"" help:"Repair note YAML frontmatter into the format notes-cli expects"`
-	Edit       editCommand       `cmd:"" help:"Interactively select a note with fzf and open it in the editor"`
 }
 
 type newCommand struct {
@@ -85,16 +84,11 @@ type saveCommand struct {
 }
 
 type configCommand struct {
-	Name string `arg:"" optional:"" help:"Key name. One of 'home', 'git', 'editor', 'fzf', 'bat'. Only value will be output"`
+	Name string `arg:"" optional:"" help:"Key name. One of 'home', 'git', 'editor'. Only value will be output"`
 }
 
 type fixCommand struct {
 	DryRun bool `name:"dry-run" short:"n" help:"Print what would be changed without modifying files"`
-}
-
-type editCommand struct {
-	Category string `short:"c" help:"Filter by category name with regular expression"`
-	Tag      string `short:"t" help:"Filter by tag name with regular expression"`
 }
 
 func (cmd *newCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
@@ -131,10 +125,6 @@ func (cmd *configCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
 
 func (cmd *fixCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
 	return &FixCmd{Config: c, Out: os.Stdout, DryRun: cmd.DryRun}
-}
-
-func (cmd *editCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
-	return &EditCmd{Config: c, Category: cmd.Category, Tag: cmd.Tag}
 }
 
 type commandConfig interface {

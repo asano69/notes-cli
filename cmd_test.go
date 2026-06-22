@@ -27,7 +27,6 @@ func TestParseCmdReturnsKongBackedCommands(t *testing.T) {
 		{"save", []string{"save", "--message", "msg"}, &SaveCmd{}},
 		{"config", []string{"config", "home"}, &ConfigCmd{}},
 		{"fix", []string{"fix", "--dry-run"}, &FixCmd{}},
-		{"edit", []string{"edit", "--category", "cat", "--tag", "tag"}, &EditCmd{}},
 	}
 
 	for _, tt := range tests {

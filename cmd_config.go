@@ -11,7 +11,7 @@ import (
 // Out field represents where this command should output.
 type ConfigCmd struct {
 	Config *Config
-	// Name is a name of configuration. Must be one of "", "home", "git", "editor", "fzf", "bat"
+	// Name is a name of configuration. Must be one of "", "home", "git", "editor"
 	Name string
 	// Out is a writer to write output of this command. Kind of stdout is expected
 	Out io.Writer
@@ -23,13 +23,10 @@ func (cmd *ConfigCmd) Do() error {
 	case "":
 		fmt.Fprintf(
 			cmd.Out,
-			"HOME=%s\nGIT=%s\nEDITOR=%s\nFZF=%s\nBAT=%s\nFZF_PREVIEW_WINDOW=%s\n",
+			"HOME=%s\nGIT=%s\nEDITOR=%s\n",
 			cmd.Config.HomePath,
 			cmd.Config.GitPath,
 			cmd.Config.EditorCmd,
-			cmd.Config.FzfCmd,
-			cmd.Config.BatCmd,
-			cmd.Config.FzfPreviewWindow,
 		)
 	case "home":
 		fmt.Fprintln(cmd.Out, cmd.Config.HomePath)
@@ -37,10 +34,6 @@ func (cmd *ConfigCmd) Do() error {
 		fmt.Fprintln(cmd.Out, cmd.Config.GitPath)
 	case "editor":
 		fmt.Fprintln(cmd.Out, cmd.Config.EditorCmd)
-	case "fzf":
-		fmt.Fprintln(cmd.Out, cmd.Config.FzfCmd)
-	case "bat":
-		fmt.Fprintln(cmd.Out, cmd.Config.BatCmd)
 	default:
 		return errors.Errorf("Unknown config name '%s'", cmd.Name)
 	}
