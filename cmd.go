@@ -25,7 +25,7 @@ notes is intended to be used nicely with other commands such as grep (or ag, rg)
 rm, filtering tools such as fzf or peco and editors which can be started from
 command line.
 
-notes is developed at https://github.com/rhysd/notes-cli. If you're seeing a bug or having a feature request,
+notes is developed at https://github.com/asano69/notes-cli. If you're seeing a bug or having a feature request,
 please create a new issue. Pull requests are more than welcome.`
 
 type cliOptions struct {

@@ -1,7 +1,7 @@
 /*
 Package notes is a library which consists notes command.
 
-https://github.com/rhysd/notes-cli/tree/master/cmd/notes
+https://github.com/asano69/notes-cli/tree/master/cmd/notes
 
 This library is for using notes command programmatically from Go program.
 It consists structs which represent each subcommands.
@@ -13,7 +13,7 @@ It consists structs which represent each subcommands.
 	import (
 		"bytes"
 		"fmt"
-		"github.com/rhysd/notes-cli"
+		"github.com/asano69/notes-cli"
 		"os"
 		"strings"
 	)
@@ -43,6 +43,6 @@ It consists structs which represent each subcommands.
 
 For usage of `notes` command, please read README of the repository.
 
-https://github.com/rhysd/notes-cli/blob/master/README.md
+https://github.com/asano69/notes-cli/blob/master/README.md
 */
 package notes

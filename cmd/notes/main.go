@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/asano69/notes-cli"
 	"github.com/fatih/color"
 	"github.com/mattn/go-colorable"
-	"github.com/rhysd/notes-cli"
 	"os"
 )
 
