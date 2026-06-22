@@ -7,7 +7,7 @@ notes-cliは、ターミナル上でお気に入りのエディタを使って�
 ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
 また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。  
 
-このツールは、`grep`（または [ag](https://github.com/ggreer/the_silver_searcher), [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) や [peco](https://github.com/peco/peco) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
+このツールは、`grep`（または [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
 
 このツールは、ObsidianとHugoとの互換性を重視しており、作成したノートを静的サイトにビルドすることができます。
 
@@ -23,15 +23,12 @@ notes-cliは、ターミナル上でお気に入りのエディタを使って�
 ## インストール
 
 以下のように、ソースから直接ビルドしてインストールできます。Goのツールチェーン（バージョン1.16以降）が必要です。
-NixOSの場合、flakeをつかってビルドすることもできますが、更新がむずかしく推奨されません。
 
 ```
 $ go install github.com/asano69/notes-cli/cmd/notes
-
 ```
 
 実際に使い始める前に、サンプルを使って試すことができます。
-
 ```sh
 $ git clone https://github.com/asano69/notes-cli.git
 $ cd notes-cli/
@@ -40,15 +37,12 @@ $ export NOTES_CLI_EDITOR=vim # お気に入りのエディタを設定
 $ notes list --full
 $ notes new test my-local-trial
 $ git status # ホームディレクトリにどのようなファイルが作成されたか確認
-
 ```
 
 アンインストールする場合：
-
 ```sh
 $ rm -rf "$(notes config home)" # すべてのメモを削除
 $ rm "$(which notes)" # 実行ファイルを削除
-
 ```
 
 ## 基本的な使い方
@@ -102,7 +96,6 @@ notes-cliのホームディレクトリ下のディレクトリ構造は、以�
 
 ```
 $ notes new blog how-to-handle-files golang,file
-
 ```
 
 これにより、`<HOME>/notes-cli/blog/how-to-handle-files.md` にメモファイルが作成されます。ホームディレクトリは自動的に作成されます。
@@ -158,14 +151,12 @@ GoDocがすべてを解説しています。
 
 ```
 $ notes list # または `notes ls`
-
 ```
 
 たとえば、現時点でメモが1つしかない場合は、以下のように1つのパスが表示されます。
 
 ```
 /Users/me/.local/share/notes-cli/blog/how-to-handle-files.md
-
 ```
 
 なお、`/Users/<ユーザー名>/.local/share` は macOS や Linux におけるデフォルトの XDG data ディレクトリです。環境変数 `$NOTES_CLI_HOME` を設定することで、この場所を変更できます。
@@ -175,34 +166,30 @@ $ notes list # または `notes ls`
 ```
 $ notes list --edit
 $ notes ls -e
-
 ```
 
 複数のメモがある場合、メモは1行ずつ出力されます。そのため、`grep`、`head`、`peco`、`fzf` などを使ってリストをフィルタリングすることで、特定のメモを簡単に取り出すことができます。
 
 ```
 $ notes ls | grep -l file | xargs -o vim
-
 ```
 
 または、以下のような方法も機能します。
 
 ```
 vim $(notes ls | xargs grep file)
-
 ```
 
-また、`grep`、`rg`、`ag` などを使えば、メモの検索も簡単です。
+また、`grep`、`rg` などを使えば、メモの検索も簡単です。
 
 ```
-$ notes ls | xargs ag documentation
-
+$ notes ls | xargs rg documentation
 ```
 
 検索して、それをそのまま Vim で開きたい場合も簡単です。
 
 ```
-$ notes ls | xargs ag -l documentation | xargs -o vim
+$ notes ls | xargs rg -l documentation | xargs -o vim
 
 ```
 
@@ -250,7 +237,6 @@ GoDocがすべてを解説しています。
 * メモのタイトル
 * メモの本文（最大10行まで）
 
-出力が大きく、画面に一度に収まらない場合、`list` コマンドは `less` コマンド（利用可能な場合）を使用して出力をページング（スクロール表示）します。この動作は `$NOTES_CLI_PAGER` でカスタマイズできます。
 
 メモが大量にあると多くの行が出力されます。その場合、`less` のようなページャーツールが便利です。パイプを使って明示的に `less` に渡すことで、ページごとに出力を確認することもできます。グローバルオプションの `-A` は `--always-color` の略です。
 
@@ -345,11 +331,10 @@ Git、エディタ、またはページャーとの連携を無効にしたい�
 | `$NOTES_CLI_HOME` | [XDG data dir](https://wiki.archlinux.org/index.php/XDG_Base_Directory) 配下の `notes-cli` | `notes` のホームディレクトリ。すべてのメモはこのサブディレクトリ内に保存されます。 |
 | `$NOTES_CLI_EDITOR` | なし | お気に入りのエディタコマンド。`"vim -g"` のようなオプションを含めることができます。 |
 | `$NOTES_CLI_GIT` | `"git"` | Gitコマンドのパス。メモをGitリポジトリとして保存するために使用されます。 |
-| `$NOTES_CLI_PAGER` | `"less -R -F -X"` | `notes list` からの長い出力をページングするためのページャーコマンド。 |
 | `$XDG_DATA_HOME` | なし | `$NOTES_CLI_HOME` が設定されていない場合、ホームとして使用されます。 |
 | `$APPLOCALDATA` | なし | Windows環境において `$XDG_DATA_HOME` が設定されていない場合でも、ホームとして使用されます。 |
 | `$EDITOR` | なし | `$NOTES_CLI_EDITOR` が設定されていない場合、エディタコマンドを選択するために参照されます。 |
-| `$PAGER` | なし | `$NOTES_CLI_PAGER` が設定されていない場合、ページャーコマンドを選択するために参照されます。 |
+| `$PAGER` | なし | ページャーコマンドを選択するために参照されます。 |
 
 設定内容は `notes config` コマンドで確認できます。
 
