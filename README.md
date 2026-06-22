@@ -1,7 +1,7 @@
 # A small CLI note taking tool with your favorite editor
 
 > [!NOTE]
-> これは、MIT ライセンスの notes-cli をもとに独自にメンテナンスしているフォークです。
+> これは、MIT ライセンスの [rhysd/notes-cli](https://github.com/rhysd/notes-cli) をもとに独自にメンテナンスしているフォークです。
 
 notes-cliは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。  
 ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
