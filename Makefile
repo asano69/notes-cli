@@ -5,6 +5,6 @@ build:
 .PHONY: install
 install: build
 	rm -f ~/go/bin/notes
-	rm -f ~/.local/bin/nn
+	rm -f ~/.local/bin/notes-editor
 	cp notes ~/go/bin
-	cp nn.sh ~/.local/bin/nn
+	cp notes-editor ~/.local/bin/notes-editor
