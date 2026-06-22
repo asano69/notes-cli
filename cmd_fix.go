@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 // FixCmd represents `notes fix` command.
@@ -39,21 +38,11 @@ import (
 // whose frontmatter cannot be repaired automatically is reported instead of
 // being changed.
 type FixCmd struct {
-	cli    *kingpin.CmdClause
 	Config *Config
 	// DryRun prints what would be changed without modifying files
 	DryRun bool
 	// Out is a writer to write output of this command
 	Out io.Writer
-}
-
-func (cmd *FixCmd) defineCLI(app *kingpin.Application) {
-	cmd.cli = app.Command("fix", "Repair note YAML frontmatter into the format notes-cli expects")
-	cmd.cli.Flag("dry-run", "Print what would be changed without modifying files").Short('n').BoolVar(&cmd.DryRun)
-}
-
-func (cmd *FixCmd) matchesCmdline(cmdline string) bool {
-	return cmd.cli.FullCommand() == cmdline
 }
 
 // Do runs `notes fix` command and returns an error if any occurs.
@@ -283,22 +272,22 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	}
 	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
-// categories: inline list. The note's actual directory (relative to
-// home) is the source of truth, since that's what `notes` uses to find
-// the note again. If the first element is missing or doesn't match it,
-// it's replaced with a single-element list derived from the directory.
-// Extra elements beyond the first are otherwise left untouched, since
-// `notes` itself never reads them.
-categories, err := listItemsOf(byKey, "categories")
-if err != nil {
-	return nil, err
-}
-if dirCat, err := relativeCategory(path, home); err == nil && dirCat != "" {
-	if len(categories) == 0 || categories[0] != dirCat {
-		categories = []string{dirCat}
+	// categories: inline list. The note's actual directory (relative to
+	// home) is the source of truth, since that's what `notes` uses to find
+	// the note again. If the first element is missing or doesn't match it,
+	// it's replaced with a single-element list derived from the directory.
+	// Extra elements beyond the first are otherwise left untouched, since
+	// `notes` itself never reads them.
+	categories, err := listItemsOf(byKey, "categories")
+	if err != nil {
+		return nil, err
 	}
-}
- 	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
+	if dirCat, err := relativeCategory(path, home); err == nil && dirCat != "" {
+		if len(categories) == 0 || categories[0] != dirCat {
+			categories = []string{dirCat}
+		}
+	}
+	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
 
 	// draft: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "draft")...)

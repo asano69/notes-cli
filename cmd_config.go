@@ -3,7 +3,6 @@ package notes
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"strings"
 )
@@ -11,21 +10,11 @@ import (
 // ConfigCmd represents `notes config` command. Each public fields represent options of the command.
 // Out field represents where this command should output.
 type ConfigCmd struct {
-	cli    *kingpin.CmdClause
 	Config *Config
 	// Name is a name of configuration. Must be one of "", "home", "git", "editor", "fzf", "bat"
 	Name string
 	// Out is a writer to write output of this command. Kind of stdout is expected
 	Out io.Writer
-}
-
-func (cmd *ConfigCmd) defineCLI(app *kingpin.Application) {
-	cmd.cli = app.Command("config", "Output config values to stdout. By default output all values with KEY=VALUE style")
-	cmd.cli.Arg("name", "Key name. One of 'home', 'git', 'editor', 'fzf', 'bat'. Only value will be output").StringVar(&cmd.Name)
-}
-
-func (cmd *ConfigCmd) matchesCmdline(cmdline string) bool {
-	return cmd.cli.FullCommand() == cmdline
 }
 
 // Do runs `notes config` command and returns an error if occurs

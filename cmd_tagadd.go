@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 // AddTagCmd represents `notes tagadd` command. Unlike `tag-add` (which opens
@@ -18,22 +17,11 @@ import (
 //     frontmatter (e.g. "test/aaa"), in which case the tag is added to
 //     every note belonging to that category.
 type AddTagCmd struct {
-	cli    *kingpin.CmdClause
 	Config *Config
 	// Tag is the tag name to add
 	Tag string
 	// Target is a path to a note file, or a category name
 	Target string
-}
-
-func (cmd *AddTagCmd) defineCLI(app *kingpin.Application) {
-	cmd.cli = app.Command("tagadd", "Add a tag to a note file, or to all notes in a category")
-	cmd.cli.Arg("tag", "Tag name to add").Required().StringVar(&cmd.Tag)
-	cmd.cli.Arg("target", "Path to a note file, or a category name (the 'categories' value in frontmatter, e.g. 'animal/dog')").Required().StringVar(&cmd.Target)
-}
-
-func (cmd *AddTagCmd) matchesCmdline(cmdline string) bool {
-	return cmd.cli.FullCommand() == cmdline
 }
 
 // Do runs `notes tagadd` command and returns an error if one occurs
