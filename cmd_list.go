@@ -4,14 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/mattn/go-runewidth"
-	"github.com/pkg/errors"
 	"io"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/mattn/go-runewidth"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -76,36 +76,19 @@ func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
 	fmt.Fprintln(out)
 }
 
+// printOnelineNotes outputs notes as TSV with a header row. No color or
+// alignment is applied so the output is easy to consume in tools like nushell.
 func (cmd *ListCmd) printOnelineNotes(notes []*Note) error {
-	tw := make([][2]int, len(notes))
-	max := [2]int{}
-
-	for i, note := range notes {
-		tw[i][0] = runewidth.StringWidth(note.Category+note.File) + 1 // + 1 for separator
-		tw[i][1] = runewidth.StringWidth(strings.Join(note.Tags, ","))
-		for j := 0; j < 2; j++ {
-			if tw[i][j] > max[j] {
-				max[j] = tw[i][j]
-			}
-		}
-	}
-
 	out := bufio.NewWriter(cmd.out)
-	for i, note := range notes {
-		pad := strings.Repeat(" ", max[0]-tw[i][0]+1) // +1 for separator
-		green.Fprint(out, filepath.FromSlash(note.Category))
-		out.WriteRune(filepath.Separator)
-		yellow.Fprint(out, note.File)
-		out.WriteString(pad)
-
-		pad = strings.Repeat(" ", max[1]-tw[i][1]+1) // +1 for separator
-		bold.Fprint(out, strings.Join(note.Tags, ","))
-		out.WriteString(pad)
-
-		out.WriteString(note.Title)
-		out.WriteRune('\n')
+	fmt.Fprintln(out, "categories\tfilename\ttags\ttitle")
+	for _, note := range notes {
+		fmt.Fprintf(out, "%s\t%s\t%s\t%s\n",
+			note.Category,
+			note.File,
+			strings.Join(note.Tags, ","),
+			note.Title,
+		)
 	}
-
 	return out.Flush()
 }
 
@@ -215,7 +198,9 @@ func (cmd *ListCmd) Do() error {
 		return nil
 	}
 
-	if cmd.Config.PagerCmd == "" {
+	// Oneline outputs TSV directly to Out without a pager so the result is
+	// pipe-friendly for tools like nushell.
+	if cmd.Oneline || cmd.Config.PagerCmd == "" {
 		cmd.out = cmd.Out
 		return cmd.printNotes(notes)
 	}
