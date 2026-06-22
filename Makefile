@@ -8,3 +8,10 @@ install: build
 	rm -f ~/go/bin/notes-edit
 	cp notes ~/go/bin
 	cp notes-edit ~/go/bin
+
+.PHONY: update
+update:
+	go get -u ./...
+	go mod tidy
+	go mod vendor
+

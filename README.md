@@ -627,6 +627,8 @@ go test ./...
 ```sh
 go get -u ./...
 go mod tidy
+go mod vendor
+make install
 
 # flakeのバージョンを更新
 # go mod vendor
