@@ -1,15 +1,13 @@
 # A small CLI note taking tool with your favorite editor
 
+- notes-cliは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。
+- ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
+- また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。
+- このツールは、`grep`（または [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
+
 > [!NOTE]
-> これは、MIT ライセンスの [rhysd/notes-cli](https://github.com/rhysd/notes-cli) をもとに独自にメンテナンスしているフォークです。
-
-notes-cliは、ターミナル上でお気に入りのエディタを使ってメモを取るための小さなCLIツールです。  
-ターミナルからこのツールを介して、メモの管理（作成/閲覧/一覧表示）を行うことができます。
-また、メモの紛失を防ぐために、オプションでGitを使ってメモを保存することも可能です。  
-
-このツールは、`grep`（または [rg](https://github.com/BurntSushi/ripgrep)）や `rm`、[fzf](https://github.com/junegunn/fzf) などのフィルタリングツール、そしてコマンドラインから起動できるエディタなど、他のコマンドと組み合わせて快適に使用できるように設計されています。
-
-このツールは、ObsidianとHugoとの互換性を重視しており、作成したノートを静的サイトにビルドすることができます。
+> これは、[rhysd/notes-cli](https://github.com/rhysd/notes-cli) をもとに、静的サイトを構築する用途のために独自に改造したフォークです。  
+> このフォークでは、ObsidianとHugoとの互換性を重視しており、`notes save`コマンドから、CI/CDを通して静的サイトをビルドする使用法を想定しています。
 
 
 ## 目次
