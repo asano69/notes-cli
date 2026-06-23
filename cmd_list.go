@@ -80,18 +80,18 @@ func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
 // The path column is absolute by default; -r makes it relative to $NOTES_CLI_HOME.
 func (cmd *ListCmd) printOnelineNotes(notes []*Note) error {
 	out := bufio.NewWriter(cmd.Out)
-	fmt.Fprintln(out, "path\ttags\ttitle")
-	for _, note := range notes {
-		path := note.FilePath()
-		if cmd.Relative {
-			path = note.RelFilePath()
-		}
-		fmt.Fprintf(out, "%s\t%s\t%s\n",
-			path,
-			strings.Join(note.Tags, ","),
-			note.Title,
-		)
-	}
+fmt.Fprintln(out, "path\ttitle\ttags")
+for _, note := range notes {
+    path := note.FilePath()
+    if cmd.Relative {
+        path = note.RelFilePath()
+    }
+    fmt.Fprintf(out, "%s\t%s\t%s\n",
+        path,
+        note.Title,
+        strings.Join(note.Tags, ","),
+    )
+}
 	return out.Flush()
 }
 

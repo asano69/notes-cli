@@ -1,8 +1,128 @@
-#!/usr/bin/env bash
-notes ls -ro |
-    tail -n +2 |
-    fzf --delimiter="\t" \
-        --preview="bat --color=always $NOTES_CLI_HOME/{1}" \
-        --preview-window=up:60% |
-    awk -F'\t' '{print $1}' |
-    xargs -I{} $EDITOR "$NOTES_CLI_HOME/{}"
+#!/usr/bin/env python3
+"""Pick a note via fzf (preview with bat) and open it in $EDITOR.
+
+Expects `notes ls -ro` to print tab-separated rows: path, title, tags,
+with a header row on top.
+"""
+
+import os
+import re
+import shutil
+import subprocess
+import sys
+
+# ANSI color codes (kept close to the original shell script's palette).
+# The title column is left in the terminal's default color, matching the
+# original script where TITLE_COLOR was effectively a no-op reset.
+DIR_COLOR = "\033[34m"   # blue
+FILE_COLOR = "\033[32m"  # green
+TAGS_COLOR = "\033[35m"  # magenta
+RESET = "\033[0m"
+
+MAX_FILE_LEN = 22
+INDEX_FILE_RE = re.compile(r"(^|/)_index\.md$")
+
+
+def require(tool):
+    """Exit with a clear message if a required external tool is missing."""
+    if shutil.which(tool) is None:
+        sys.exit(f"error: '{tool}' is required but was not found in PATH")
+
+
+def format_tags(raw_tags):
+    """Turn "a,b,c" into "#a #b #c"."""
+    tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+    return " ".join(f"#{t}" for t in tags)
+
+
+def colorize_path(path):
+    """Color the directory part and the (possibly truncated) filename."""
+    dirpart, filename = os.path.split(path)
+    if dirpart:
+        dirpart += "/"
+    # Truncate only the displayed filename; the raw path used for
+    # selection and the preview is never touched.
+    disp_file = filename
+    if len(disp_file) > MAX_FILE_LEN:
+        disp_file = disp_file[: MAX_FILE_LEN - 3] + "..."
+    return f"{DIR_COLOR}{dirpart}{RESET}{FILE_COLOR}{disp_file}{RESET}"
+
+
+def build_rows():
+    """Fetch notes and build fzf input rows.
+
+    Each row has 4 tab-separated fields:
+      1) raw path     -- used for --accept-nth and the preview command
+      2) raw title    -- displayed as-is, no coloring
+      3) colored path -- directory/filename coloring for display
+      4) colored tags -- "#tag #tag" coloring for display
+    """
+    try:
+        result = subprocess.run(
+            ["notes", "ls", "-ro"], capture_output=True, text=True, check=True
+        )
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"error: 'notes ls -ro' failed: {e.stderr.strip()}")
+
+    rows = []
+    for line in result.stdout.splitlines()[1:]:  # skip header row
+        parts = line.split("\t", 2)
+        if len(parts) < 3:
+            continue  # skip malformed rows instead of crashing
+        path, title, raw_tags = parts
+        if INDEX_FILE_RE.search(path):
+            continue  # exclude _index.md files
+        tags = format_tags(raw_tags)
+        colored_tags = f"{TAGS_COLOR}{tags}{RESET}" if tags else ""
+        rows.append("\t".join([path, title, colorize_path(path), colored_tags]))
+    return rows
+
+
+def pick_note(rows, notes_home):
+    """Run fzf over the rows; return the selected note's raw path or None."""
+    # fzf already shell-quotes the value it substitutes for {1}, so we must
+    # NOT wrap {1} in our own quotes (that produced double-quoting and broke
+    # the path). Quoting just the static prefix and leaving it adjacent to
+    # {1} works because adjacent quoted strings concatenate in POSIX shell.
+    preview_cmd = f"bat --color=always '{notes_home}/'{{1}}"
+    result = subprocess.run(
+        [
+            "fzf",
+            "--ansi",
+            "--delimiter=\t",
+            "--with-nth=3,2,4",  # display order: path, title, tags
+            "--accept-nth=1",
+            f"--preview={preview_cmd}",
+            "--preview-window=up:60%",
+        ],
+        input="\n".join(rows),
+        capture_output=True,
+        text=True,
+    )
+    selected = result.stdout.strip()
+    return selected or None
+
+
+def main():
+    require("notes")
+    require("fzf")
+    require("bat")
+
+    notes_home = os.environ.get("NOTES_CLI_HOME")
+    if not notes_home:
+        sys.exit("error: NOTES_CLI_HOME is not set")
+
+    rows = build_rows()
+    if not rows:
+        sys.exit("no notes found")
+
+    selected = pick_note(rows, notes_home)
+    if selected is None:
+        return  # user cancelled
+
+    editor = os.environ.get("EDITOR", "vi")
+    subprocess.run([editor, os.path.join(notes_home, selected)])
+
+
+if __name__ == "__main__":
+    main()
