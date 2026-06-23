@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 notes ls -ro |
     tail -n +2 |
-    awk -F'\t' '{print $1 "/" $2 "\t" $0}' |
-    fzf --delimiter="\t" --with-nth=2.. \
+    fzf --delimiter="\t" \
         --preview="bat --color=always $NOTES_CLI_HOME/{1}" \
         --preview-window=up:60% |
     awk -F'\t' '{print $1}' |
