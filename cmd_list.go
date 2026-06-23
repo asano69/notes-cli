@@ -77,13 +77,17 @@ func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
 
 // printOnelineNotes outputs notes as TSV with a header row. No color or
 // alignment is applied so the output is easy to consume in tools like nushell.
+// The path column is absolute by default; -r makes it relative to $NOTES_CLI_HOME.
 func (cmd *ListCmd) printOnelineNotes(notes []*Note) error {
 	out := bufio.NewWriter(cmd.Out)
-	fmt.Fprintln(out, "categories\tfilename\ttags\ttitle")
+	fmt.Fprintln(out, "path\ttags\ttitle")
 	for _, note := range notes {
-		fmt.Fprintf(out, "%s\t%s\t%s\t%s\n",
-			note.Category,
-			note.File,
+		path := note.FilePath()
+		if cmd.Relative {
+			path = note.RelFilePath()
+		}
+		fmt.Fprintf(out, "%s\t%s\t%s\n",
+			path,
 			strings.Join(note.Tags, ","),
 			note.Title,
 		)
