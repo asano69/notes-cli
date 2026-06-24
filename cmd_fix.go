@@ -21,19 +21,18 @@ import (
 //	title: ""
 //	summary: ""
 //	tags: []
-//	categories: []
 //	draft:
 //	date:
 //	lastmod:
 //	---
 //
 // Missing keys are added with their default value. An unquoted 'title' or
-// 'summary' is wrapped in double quotes. Block-style 'tags'/'categories'
-// lists are converted to the inline '[...]' style. An empty 'title' is
-// derived from the file name, and an empty 'date' from the current time.
-// 'categories' is always reconciled against the note's actual directory
-// relative to home, overwriting a missing or mismatched value so `notes`
-// can locate the note again.
+// 'summary' is wrapped in double quotes. Block-style 'tags' lists are
+// converted to the inline '[...]' style. An empty 'title' is derived from
+// the file name, and an empty 'date' from the current time.
+// 'categories' and the legacy 'category' field are removed: category is
+// always derivable from the file's location relative to NOTES_CLI_HOME, so
+// storing it in frontmatter is redundant.
 // 'draft' and 'lastmod' are never modified, only added when missing. A note
 // whose frontmatter cannot be repaired automatically is reported instead of
 // being changed.
@@ -272,22 +271,9 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	}
 	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
-	// categories: inline list. The note's actual directory (relative to
-	// home) is the source of truth, since that's what `notes` uses to find
-	// the note again. If the first element is missing or doesn't match it,
-	// it's replaced with a single-element list derived from the directory.
-	// Extra elements beyond the first are otherwise left untouched, since
-	// `notes` itself never reads them.
-	categories, err := listItemsOf(byKey, "categories")
-	if err != nil {
-		return nil, err
-	}
-	if dirCat, err := relativeCategory(path, home); err == nil && dirCat != "" {
-		if len(categories) == 0 || categories[0] != dirCat {
-			categories = []string{dirCat}
-		}
-	}
-	lines = append(lines, formatFrontmatterField(listField, "categories", "", categories))
+	// categories and the legacy category field are intentionally omitted.
+	// Category is always derivable from the file's path relative to
+	// NOTES_CLI_HOME, so storing it in frontmatter is redundant.
 
 	// draft: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "draft")...)
@@ -304,10 +290,15 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 
 	// lastmod: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "lastmod")...)
+
 	// Any key outside the known schema is preserved verbatim, in its
 	// original order, after the known keys above.
+	// "category" (legacy singular) is also suppressed here: it is not in
+	// frontmatterSchema (so isFrontmatterKey returns false for it), but
+	// like "categories" it is now derived from the file path and should
+	// be removed from existing notes.
 	for _, e := range entries {
-		if isFrontmatterKey(e.key) {
+		if isFrontmatterKey(e.key) || e.key == "category" {
 			continue
 		}
 		lines = append(lines, e.lines...)
@@ -344,23 +335,8 @@ func isFrontmatterKey(key string) bool {
 		if f.key == key {
 			return true
 		}
-	}
-	return false
 }
-
-// relativeCategory derives a category path from the directory containing
-// the note, relative to the notes home directory. A note placed directly
-// under home has no category, so an empty string is returned in that case.
-func relativeCategory(path, home string) (string, error) {
-	rel, err := filepath.Rel(home, filepath.Dir(path))
-	if err != nil {
-		return "", err
-	}
-	rel = filepath.ToSlash(rel)
-	if rel == "." {
-		return "", nil
-	}
-	return rel, nil
+	return false
 }
 
 // quote wraps s in double quotes, escaping any backslash or double quote it

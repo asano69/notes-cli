@@ -100,6 +100,9 @@ func (note *Note) Create() error {
 	// Frontmatter is rendered from frontmatterSchema (see frontmatter.go), so
 	// the field set, order, and formatting (e.g. title/summary being quoted)
 	// stay in sync with what FixCmd produces.
+	// categories is intentionally omitted: it is always derivable from the
+	// file's location relative to NOTES_CLI_HOME, so storing it in the
+	// frontmatter is redundant. LoadNote derives it from the path when absent.
 	b.WriteString(renderFrontmatter(
 		map[string]string{
 			"title":   title,
@@ -109,8 +112,8 @@ func (note *Note) Create() error {
 			"lastmod": "",
 		},
 		map[string][]string{
-			"tags":       note.Tags,
-			"categories": {note.Category},
+			"tags": note.Tags,
+			// "categories" is deliberately omitted.
 		},
 	))
 	b.WriteRune('\n')
@@ -252,8 +255,10 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 }
 
 // LoadNote reads note file from given path, parses it and creates Note instance. When given file path
-// does not exist or when the file does not contain mandatory metadata ('category'/'categories', 'tags'
-// and 'created'/'date'), this function returns an error.
+// does not exist or when the file does not contain mandatory metadata ('tags' and 'created'/'date'),
+// this function returns an error.
+// Category is derived from the file's location relative to HomePath when absent from frontmatter,
+// so 'category'/'categories' in frontmatter is optional.
 func LoadNote(path string, cfg *Config) (*Note, error) {
 	// This is necessary for macOS, where path contains NFD format
 	path = normPathNFD(path)
@@ -393,8 +398,17 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 		return nil, errors.Wrapf(err, "Cannot read note file '%s'", canonPath(path))
 	}
 
-	if note.Category == "" || note.Tags == nil || note.Created.IsZero() {
-		return nil, errors.Errorf("Missing metadata in file '%s'. 'category'/'categories', 'tags', and 'created'/'date' are mandatory", canonPath(path))
+	// Category is optional in frontmatter: derive it from the file's location
+	// relative to HomePath when absent or empty.
+	if note.Category == "" {
+		parent := filepath.Dir(path)
+		if rel, err := filepath.Rel(cfg.HomePath, parent); err == nil {
+			note.Category = filepath.ToSlash(rel)
+		}
+	}
+
+	if note.Tags == nil || note.Created.IsZero() {
+		return nil, errors.Errorf("Missing metadata in file '%s'. 'tags' and 'created'/'date' are mandatory", canonPath(path))
 	}
 
 	// For old-format notes, title lives in the H1 heading after the closing ---.

@@ -61,11 +61,23 @@ func formatFrontmatterField(kind frontmatterFieldKind, key, scalar string, list 
 // renderFrontmatter builds a full "---\n...\n---\n" YAML frontmatter block
 // from field values, in frontmatterSchema order. scalars holds values for
 // quotedField/rawField keys; lists holds values for listField keys.
+// A listField whose key is absent from lists is omitted entirely; this lets
+// callers suppress optional list fields (e.g. categories) without touching
+// the schema.
 func renderFrontmatter(scalars map[string]string, lists map[string][]string) string {
 	var b strings.Builder
 	b.WriteString("---\n")
 	for _, f := range frontmatterSchema {
-		b.WriteString(formatFrontmatterField(f.kind, f.key, scalars[f.key], lists[f.key]))
+		if f.kind == listField {
+			list, ok := lists[f.key]
+			if !ok {
+				continue
+			}
+			b.WriteString(formatFrontmatterField(f.kind, f.key, "", list))
+			b.WriteByte('\n')
+			continue
+		}
+		b.WriteString(formatFrontmatterField(f.kind, f.key, scalars[f.key], nil))
 		b.WriteByte('\n')
 	}
 	b.WriteString("---\n")
