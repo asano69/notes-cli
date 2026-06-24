@@ -76,7 +76,7 @@ type tagModCommand struct {
 
 type tagAddCommand struct {
 	Tag    string `arg:"" help:"Tag name to add"`
-	Target string `arg:"" help:"Path to a note file, or a category name (the 'categories' value in frontmatter, e.g. 'animal/dog')"`
+	Target string `arg:"" help:"Path to a note file, or a category name (directory path relative to NOTES_CLI_HOME, e.g. 'animal/dog')"`
 }
 
 type saveCommand struct {

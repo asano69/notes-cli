@@ -31,8 +31,7 @@ import (
 // converted to the inline '[...]' style. An empty 'title' is derived from
 // the file name, and an empty 'date' from the current time.
 // 'categories' and the legacy 'category' field are removed: category is
-// always derivable from the file's location relative to NOTES_CLI_HOME, so
-// storing it in frontmatter is redundant.
+// always derivable from the file's location relative to NOTES_CLI_HOME.
 // 'draft' and 'lastmod' are never modified, only added when missing. A note
 // whose frontmatter cannot be repaired automatically is reported instead of
 // being changed.
@@ -53,7 +52,7 @@ func (cmd *FixCmd) Do() error {
 
 	fixed, failed := 0, 0
 	for _, p := range paths {
-		changed, err := fixNoteFile(p, cmd.Config.HomePath, cmd.DryRun)
+		changed, err := fixNoteFile(p, cmd.DryRun)
 		if err != nil {
 			fmt.Fprintf(cmd.Out, "%s\n  error: %s\n", p, err)
 			failed++
@@ -110,7 +109,7 @@ func collectMarkdownFiles(root string) ([]string, error) {
 // It reports whether the file was (or, in dry-run mode, would be) changed.
 // When the frontmatter is broken in a way this command cannot repair
 // automatically, an error is returned and the file is left untouched.
-func fixNoteFile(path, home string, dryRun bool) (bool, error) {
+func fixNoteFile(path string, dryRun bool) (bool, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return false, errors.Wrap(err, "cannot read file")
@@ -132,7 +131,7 @@ func fixNoteFile(path, home string, dryRun bool) (bool, error) {
 		return false, errors.New("frontmatter is not closed with a '---' delimiter")
 	}
 
-	fixed, err := fixedFrontmatter(parseFrontmatterEntries(lines[1:end]), path, home)
+	fixed, err := fixedFrontmatter(parseFrontmatterEntries(lines[1:end]), path)
 	if err != nil {
 		return false, err
 	}
@@ -198,8 +197,8 @@ func (e frontmatterEntry) scalarValue() string {
 	return strings.TrimSpace(value)
 }
 
-// listItems returns the elements of a tags/categories entry, accepting both
-// the inline style ("key: [a, b]") and the block style ("key:\n  - a\n  - b").
+// listItems returns the elements of a tags entry, accepting both the inline
+// style ("key: [a, b]") and the block style ("key:\n  - a\n  - b").
 // Quotes around individual elements are stripped and empty elements are
 // dropped. An entry with no value at all yields a nil slice.
 func (e frontmatterEntry) listItems() ([]string, error) {
@@ -239,7 +238,7 @@ func (e frontmatterEntry) listItems() ([]string, error) {
 // fixedFrontmatter builds the repaired frontmatter lines (without the
 // surrounding '---' delimiters) for a note, given its parsed entries. It
 // returns an error if some entry cannot be repaired automatically.
-func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, error) {
+func fixedFrontmatter(entries []frontmatterEntry, path string) ([]string, error) {
 	byKey := make(map[string]frontmatterEntry, len(entries))
 	for _, e := range entries {
 		byKey[e.key] = e
@@ -271,9 +270,9 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 	}
 	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
-	// categories and the legacy category field are intentionally omitted.
-	// Category is always derivable from the file's path relative to
-	// NOTES_CLI_HOME, so storing it in frontmatter is redundant.
+	// "categories" and the legacy "category" are intentionally not written.
+	// They are suppressed in the unknown-key loop below so that existing
+	// notes have them removed on the next fix run.
 
 	// draft: never touched, only defaulted when missing
 	lines = append(lines, untouchedOrDefault(byKey, "draft")...)
@@ -293,12 +292,11 @@ func fixedFrontmatter(entries []frontmatterEntry, path, home string) ([]string, 
 
 	// Any key outside the known schema is preserved verbatim, in its
 	// original order, after the known keys above.
-	// "category" (legacy singular) is also suppressed here: it is not in
-	// frontmatterSchema (so isFrontmatterKey returns false for it), but
-	// like "categories" it is now derived from the file path and should
-	// be removed from existing notes.
+	// "category" (legacy singular) and "categories" (plural) are suppressed
+	// here: both are now derived from the file path and must not be stored
+	// in frontmatter.
 	for _, e := range entries {
-		if isFrontmatterKey(e.key) || e.key == "category" {
+		if isFrontmatterKey(e.key) || e.key == "category" || e.key == "categories" {
 			continue
 		}
 		lines = append(lines, e.lines...)
@@ -335,7 +333,7 @@ func isFrontmatterKey(key string) bool {
 		if f.key == key {
 			return true
 		}
-}
+	}
 	return false
 }
 

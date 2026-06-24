@@ -31,15 +31,18 @@ type frontmatterField struct {
 }
 
 // frontmatterSchema is the single source of truth for the YAML frontmatter
-// schema: the keys notes-cli manages, their order, and how each value is
-// rendered. note.Create() (writing a brand-new note) and FixCmd (repairing
-// an existing note) both build their output from this table, so adding,
-// removing, re-ordering, or re-formatting a field only needs to happen here.
+// schema: the keys notes-cli actively writes, their order, and how each value
+// is rendered. note.Create() (writing a brand-new note) and FixCmd (repairing
+// an existing note) both build their output from this table.
+//
+// "category" (legacy singular) and "categories" (plural) are intentionally
+// absent: category is always derivable from the file's location relative to
+// NOTES_CLI_HOME. FixCmd suppresses both keys explicitly so they are removed
+// from existing notes on the next fix run.
 var frontmatterSchema = []frontmatterField{
 	{"title", quotedField},
 	{"summary", quotedField},
 	{"tags", listField},
-	{"categories", listField},
 	{"draft", rawField},
 	{"date", rawField},
 	{"lastmod", rawField},
@@ -61,9 +64,7 @@ func formatFrontmatterField(kind frontmatterFieldKind, key, scalar string, list 
 // renderFrontmatter builds a full "---\n...\n---\n" YAML frontmatter block
 // from field values, in frontmatterSchema order. scalars holds values for
 // quotedField/rawField keys; lists holds values for listField keys.
-// A listField whose key is absent from lists is omitted entirely; this lets
-// callers suppress optional list fields (e.g. categories) without touching
-// the schema.
+// A listField whose key is absent from lists is omitted entirely.
 func renderFrontmatter(scalars map[string]string, lists map[string][]string) string {
 	var b strings.Builder
 	b.WriteString("---\n")
@@ -83,8 +84,6 @@ func renderFrontmatter(scalars map[string]string, lists map[string][]string) str
 	b.WriteString("---\n")
 	return b.String()
 }
-
-
 
 // updateTagsInFile rewrites the tags field in the YAML frontmatter of the given
 // note file. Both inline (tags: [a, b]) and block (tags:\n  - a\n  - b) formats
@@ -125,27 +124,6 @@ func updateTagsInFile(path string, newTags []string) error {
 	}
 
 	return writeFileLines(path, result)
-}
-
-// updateCategoryInFile rewrites the category field in the YAML frontmatter.
-func updateCategoryInFile(path, newCategory string) error {
-	lines, err := readFileLines(path)
-	if err != nil {
-		return err
-	}
-
-	start, end, err := frontmatterBounds(lines)
-	if err != nil {
-		return errors.Wrapf(err, "cannot locate frontmatter in %q", path)
-	}
-
-	for i, line := range lines {
-		if i > start && i < end && strings.HasPrefix(line, "category: ") {
-			lines[i] = "category: " + newCategory
-			return writeFileLines(path, lines)
-		}
-	}
-	return fmt.Errorf("category field not found in frontmatter of %q", path)
 }
 
 // frontmatterBounds returns the line indices of the opening and closing "---"

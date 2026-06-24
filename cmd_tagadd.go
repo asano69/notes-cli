@@ -13,9 +13,9 @@ import (
 // an interactive fzf picker), this command adds a single tag directly,
 // without any interaction. The second argument ("target") is either:
 //   - a path to a single note file (directories are not allowed), or
-//   - a category name matching the 'categories' field in a note's
-//     frontmatter (e.g. "test/aaa"), in which case the tag is added to
-//     every note belonging to that category.
+//   - a category name (directory path relative to NOTES_CLI_HOME,
+//     e.g. "test/aaa"), in which case the tag is added to every note
+//     belonging to that category.
 type AddTagCmd struct {
 	Config *Config
 	// Tag is the tag name to add
