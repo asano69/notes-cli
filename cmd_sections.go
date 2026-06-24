@@ -7,17 +7,17 @@ import (
 	"strings"
 )
 
-// CategoriesCmd represents `notes categories` command. Each public fields represent options of the command.
+// SectionsCmd represents `notes sections` command. Each public fields represent options of the command.
 // Out field represents where this command should output.
-type CategoriesCmd struct {
+type SectionsCmd struct {
 	Config *Config
 	// Out is a writer to write output of this command. Kind of stdout is expected
 	Out io.Writer
 }
 
-// Do runs `notes categories` command and returns an error if occurs
-func (cmd *CategoriesCmd) Do() error {
-	cats, err := CollectCategories(cmd.Config, 0)
+// Do runs `notes sections` command and returns an error if occurs
+func (cmd *SectionsCmd) Do() error {
+	cats, err := CollectSections(cmd.Config, 0)
 	if err != nil {
 		return err
 	}

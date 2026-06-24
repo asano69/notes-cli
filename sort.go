@@ -40,25 +40,25 @@ func sortByFilename(n []*Note) {
 	sort.Sort(byFilename(n))
 }
 
-type byCategory []*Note
+type bySection []*Note
 
-func (a byCategory) Len() int {
+func (a bySection) Len() int {
 	return len(a)
 }
-func (a byCategory) Swap(i, j int) {
+func (a bySection) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
-func (a byCategory) Less(i, j int) bool {
+func (a bySection) Less(i, j int) bool {
 	l, r := a[i], a[j]
-	cmp := strings.Compare(l.Category, r.Category)
+	cmp := strings.Compare(l.Section, r.Section)
 	if cmp != 0 {
 		return cmp < 0
 	}
 	return strings.Compare(l.File, r.File) < 0
 }
 
-func sortByCategory(n []*Note) {
-	sort.Sort(byCategory(n))
+func sortBySection(n []*Note) {
+	sort.Sort(bySection(n))
 }
 
 type byModified struct {

@@ -8,28 +8,28 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CategoryCollectMode customizes the behavior of how to collect categories
-type CategoryCollectMode uint
+// SectionCollectMode customizes the behavior of how to collect sections
+type SectionCollectMode uint
 
 const (
-	// OnlyFirstCategory is a flag to stop collecting categories earlier. If this flag is included
-	// in mode parameter of CollectCategories(), it collects only first category and only first
+	// OnlyFirstSection is a flag to stop collecting sections earlier. If this flag is included
+	// in mode parameter of CollectSections(), it collects only first section and only first
 	// note and stops finding anymore.
-	OnlyFirstCategory CategoryCollectMode = 1 << iota
+	OnlyFirstSection SectionCollectMode = 1 << iota
 )
 
-// Category represents a category directory which contains some notes
-type Category struct {
-	// Path is a path to the category directory
+// Section represents a section directory which contains some notes
+type Section struct {
+	// Path is a path to the section directory
 	Path string
-	// Name is a name of category
+	// Name is a name of section
 	Name string
-	// NotePaths are paths to notes of the category
+	// NotePaths are paths to notes of the section
 	NotePaths []string
 }
 
-// Notes returns all Note instances which belong to the category
-func (cat *Category) Notes(c *Config) ([]*Note, error) {
+// Notes returns all Note instances which belong to the section
+func (cat *Section) Notes(c *Config) ([]*Note, error) {
 	notes := make([]*Note, 0, len(cat.NotePaths))
 	for _, p := range cat.NotePaths {
 		n, err := LoadNote(p, c)
@@ -41,11 +41,11 @@ func (cat *Category) Notes(c *Config) ([]*Note, error) {
 	return notes, nil
 }
 
-// Categories is a map from category name to Category instance
-type Categories map[string]*Category
+// Sections is a map from section name to Section instance
+type Sections map[string]*Section
 
-// Names returns all category names as slice
-func (cats Categories) Names() []string {
+// Names returns all section names as slice
+func (cats Sections) Names() []string {
 	ss := make([]string, 0, len(cats))
 	for n := range cats {
 		ss = append(ss, n)
@@ -53,8 +53,8 @@ func (cats Categories) Names() []string {
 	return ss
 }
 
-// Notes returns all Note instances which belong to the categories
-func (cats Categories) Notes(cfg *Config) ([]*Note, error) {
+// Notes returns all Note instances which belong to the sections
+func (cats Sections) Notes(cfg *Config) ([]*Note, error) {
 	numNotes := 0
 	for _, c := range cats {
 		numNotes += len(c.NotePaths)
@@ -73,10 +73,10 @@ func (cats Categories) Notes(cfg *Config) ([]*Note, error) {
 	return notes, nil
 }
 
-// CollectCategories collects all categories under home by default. The behavior of collecting categories
+// CollectSections collects all sections under home by default. The behavior of collecting sections
 // can be customized with mode parameter. Default mode value is 0 (nothing specified).
-func CollectCategories(cfg *Config, mode CategoryCollectMode) (Categories, error) {
-	cats := Categories(map[string]*Category{})
+func CollectSections(cfg *Config, mode SectionCollectMode) (Sections, error) {
+	cats := Sections(map[string]*Section{})
 
 	fs, err := os.ReadDir(cfg.HomePath)
 	if err != nil {
@@ -109,7 +109,7 @@ func CollectCategories(cfg *Config, mode CategoryCollectMode) (Categories, error
 				}
 				rel := strings.TrimPrefix(path, cfg.HomePath)
 				n := strings.TrimPrefix(filepath.ToSlash(rel), "/")
-				cats[n] = &Category{Name: n, Path: path}
+				cats[n] = &Section{Name: n, Path: path}
 				return nil
 			}
 
@@ -121,21 +121,21 @@ func CollectCategories(cfg *Config, mode CategoryCollectMode) (Categories, error
 			cat := cats[strings.TrimPrefix(filepath.ToSlash(rel), "/")]
 			cat.NotePaths = append(cat.NotePaths, path)
 
-			if mode&OnlyFirstCategory != 0 {
+			if mode&OnlyFirstSection != 0 {
 				stopWalking = true
 				return filepath.SkipDir
 			}
 
 			return nil
 		}); err != nil {
-			return nil, errors.Wrapf(err, "Cannot walk on directory for category %q", name)
+			return nil, errors.Wrapf(err, "Cannot walk on directory for section %q", name)
 		}
 		if stopWalking {
 			break
 		}
 	}
 
-	// Remove category which has no note
+	// Remove section which has no note
 	for n, c := range cats {
 		if len(c.NotePaths) == 0 {
 			delete(cats, n)

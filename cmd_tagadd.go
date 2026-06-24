@@ -13,14 +13,14 @@ import (
 // an interactive fzf picker), this command adds a single tag directly,
 // without any interaction. The second argument ("target") is either:
 //   - a path to a single note file (directories are not allowed), or
-//   - a category name (directory path relative to NOTES_CLI_HOME,
+//   - a section name (directory path relative to NOTES_CLI_HOME,
 //     e.g. "test/aaa"), in which case the tag is added to every note
-//     belonging to that category.
+//     belonging to that section.
 type AddTagCmd struct {
 	Config *Config
 	// Tag is the tag name to add
 	Tag string
-	// Target is a path to a note file, or a category name
+	// Target is a path to a note file, or a section name
 	Target string
 }
 
@@ -33,11 +33,11 @@ func (cmd *AddTagCmd) Do() error {
 
 	// A target that exists as a regular file is treated as a single note
 	// path. Anything else (a directory, or a path that doesn't exist) is
-	// treated as a category name instead.
+	// treated as a section name instead.
 	if info, err := os.Stat(cmd.Target); err == nil && !info.IsDir() {
 		return cmd.addToFile(cmd.Target, tag)
 	}
-	return cmd.addToCategory(cmd.Target, tag)
+	return cmd.addToSection(cmd.Target, tag)
 }
 
 // addToFile adds tag to the single note file at path.
@@ -60,17 +60,17 @@ func (cmd *AddTagCmd) addToFile(path, tag string) error {
 	return nil
 }
 
-// addToCategory adds tag to every note belonging to the given category.
-func (cmd *AddTagCmd) addToCategory(category, tag string) error {
-	cats, err := CollectCategories(cmd.Config, 0)
+// addToSection adds tag to every note belonging to the given section.
+func (cmd *AddTagCmd) addToSection(section, tag string) error {
+	cats, err := CollectSections(cmd.Config, 0)
 	if err != nil {
 		return err
 	}
 
-	cat, ok := cats[category]
+	cat, ok := cats[section]
 	if !ok {
 		ns := cats.Names()
-		return errors.Errorf("Category '%s' does not exist. All categories are %s", category, strings.Join(ns, ", "))
+		return errors.Errorf("Section '%s' does not exist. All sections are %s", section, strings.Join(ns, ", "))
 	}
 
 	notes, err := cat.Notes(cmd.Config)

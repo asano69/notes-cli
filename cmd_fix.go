@@ -30,7 +30,7 @@ import (
 // 'summary' is wrapped in double quotes. Block-style 'tags' lists are
 // converted to the inline '[...]' style. An empty 'title' is derived from
 // the file name, and an empty 'date' from the current time.
-// 'categories' and the legacy 'category' field are removed: category is
+// 'sections' and the legacy 'section' field are removed: section is
 // always derivable from the file's location relative to NOTES_CLI_HOME.
 // 'draft' and 'lastmod' are never modified, only added when missing. A note
 // whose frontmatter cannot be repaired automatically is reported instead of
@@ -270,7 +270,7 @@ func fixedFrontmatter(entries []frontmatterEntry, path string) ([]string, error)
 	}
 	lines = append(lines, formatFrontmatterField(listField, "tags", "", tags))
 
-	// "categories" and the legacy "category" are intentionally not written.
+	// "sections" and the legacy "section" are intentionally not written.
 	// They are suppressed in the unknown-key loop below so that existing
 	// notes have them removed on the next fix run.
 
@@ -292,11 +292,11 @@ func fixedFrontmatter(entries []frontmatterEntry, path string) ([]string, error)
 
 	// Any key outside the known schema is preserved verbatim, in its
 	// original order, after the known keys above.
-	// "category" (legacy singular) and "categories" (plural) are suppressed
+	// "section" (legacy singular) and "sections" (plural) are suppressed
 	// here: both are now derived from the file path and must not be stored
 	// in frontmatter.
 	for _, e := range entries {
-		if isFrontmatterKey(e.key) || e.key == "category" || e.key == "categories" {
+		if isFrontmatterKey(e.key) || e.key == "section" || e.key == "sections" {
 			continue
 		}
 		lines = append(lines, e.lines...)

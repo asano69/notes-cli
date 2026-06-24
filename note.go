@@ -12,18 +12,18 @@ import (
 	"github.com/pkg/errors"
 )
 
-// MismatchCategoryError represents an error caused when a user specifies mismatched category
-type MismatchCategoryError struct {
+// MismatchSectionError represents an error caused when a user specifies mismatched section
+type MismatchSectionError struct {
 	cat, pathcat, path string
 }
 
-func (e *MismatchCategoryError) Error() string {
-	return fmt.Sprintf("Category does not match to file path. Category is '%s' but it should be '%s' from its file path. File path is '%s'", e.cat, e.pathcat, e.path)
+func (e *MismatchSectionError) Error() string {
+	return fmt.Sprintf("Section does not match to file path. Section is '%s' but it should be '%s' from its file path. File path is '%s'", e.cat, e.pathcat, e.path)
 }
 
-// Is returns if given error is a MismatchCategoryError or not
-func (e *MismatchCategoryError) Is(target error) bool {
-	_, ok := target.(*MismatchCategoryError)
+// Is returns if given error is a MismatchSectionError or not
+func (e *MismatchSectionError) Is(target error) bool {
+	_, ok := target.(*MismatchSectionError)
 	return ok
 }
 
@@ -31,8 +31,8 @@ func (e *MismatchCategoryError) Is(target error) bool {
 type Note struct {
 	// Config is a configuration of notes command which was created by NewConfig()
 	Config *Config
-	// Category is a category string. It must not be empty
-	Category string
+	// Section is a section string. It must not be empty
+	Section string
 	// Tags is tags of note. It can be empty and cannot contain comma
 	Tags []string
 	// Created is a datetime when note was created
@@ -47,19 +47,19 @@ type Note struct {
 	Code string
 }
 
-// DirPath returns the absolute category directory path of the note
+// DirPath returns the absolute section directory path of the note
 func (note *Note) DirPath() string {
-	return filepath.Join(note.Config.HomePath, filepath.FromSlash(note.Category))
+	return filepath.Join(note.Config.HomePath, filepath.FromSlash(note.Section))
 }
 
 // FilePath returns the absolute file path of the note
 func (note *Note) FilePath() string {
-	return filepath.Join(note.Config.HomePath, filepath.FromSlash(note.Category), note.File)
+	return filepath.Join(note.Config.HomePath, filepath.FromSlash(note.Section), note.File)
 }
 
 // RelFilePath returns the relative file path of the note from home directory
 func (note *Note) RelFilePath() string {
-	return filepath.Join(filepath.FromSlash(note.Category), note.File)
+	return filepath.Join(filepath.FromSlash(note.Section), note.File)
 }
 
 // TemplatePath resolves a path to template file of the note. If no template is found, it returns
@@ -100,7 +100,7 @@ func (note *Note) Create() error {
 	// Frontmatter is rendered from frontmatterSchema (see frontmatter.go), so
 	// the field set, order, and formatting (e.g. title/summary being quoted)
 	// stay in sync with what FixCmd produces.
-	// categories is intentionally omitted: it is always derivable from the
+	// sections is intentionally omitted: it is always derivable from the
 	// file's location relative to NOTES_CLI_HOME, so storing it in the
 	// frontmatter is redundant. LoadNote derives it from the path when absent.
 	b.WriteString(renderFrontmatter(
@@ -113,7 +113,7 @@ func (note *Note) Create() error {
 		},
 		map[string][]string{
 			"tags": note.Tags,
-			// "categories" is deliberately omitted.
+			// "sections" is deliberately omitted.
 		},
 	))
 	b.WriteRune('\n')
@@ -124,7 +124,7 @@ func (note *Note) Create() error {
 
 	d := note.DirPath()
 	if err := os.MkdirAll(d, 0755); err != nil {
-		return errors.Wrapf(err, "Could not create category directory '%s'", d)
+		return errors.Wrapf(err, "Could not create section directory '%s'", d)
 	}
 
 	p := filepath.Join(d, note.File)
@@ -213,7 +213,7 @@ func (note *Note) ReadBodyLines(maxLines int) (string, int, error) {
 	return buf.String(), readLines, nil
 }
 
-// NewNote creates a new note instance with given parameters and configuration. Category and file name
+// NewNote creates a new note instance with given parameters and configuration. Section and file name
 // cannot be empty. If given file name lacks file extension, it automatically adds ".md" to file name.
 // The created file name is also prefixed with the creation date as "YYYY-MM-DD-".
 func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
@@ -223,7 +223,7 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 
 	for _, part := range strings.Split(cat, "/") {
 		if err := validateDirname(part); err != nil {
-			return nil, errors.Wrapf(err, "Invalid category part '%s' as directory name", part)
+			return nil, errors.Wrapf(err, "Invalid section part '%s' as directory name", part)
 		}
 	}
 
@@ -257,8 +257,8 @@ func NewNote(cat, tags, file, title string, cfg *Config) (*Note, error) {
 // LoadNote reads note file from given path, parses it and creates Note instance. When given file path
 // does not exist or when the file does not contain mandatory metadata ('tags' and 'created'/'date'),
 // this function returns an error.
-// Category is derived from the file's location relative to HomePath when absent from frontmatter,
-// so 'category'/'categories' in frontmatter is optional.
+// Section is derived from the file's location relative to HomePath when absent from frontmatter,
+// so 'section'/'sections' in frontmatter is optional.
 func LoadNote(path string, cfg *Config) (*Note, error) {
 	// This is necessary for macOS, where path contains NFD format
 	path = normPathNFD(path)
@@ -280,10 +280,10 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	}
 
 	// Parse frontmatter fields.
-	// Supports both the new format (title, date, categories, summary, code) and the
-	// legacy format (category, created) for backward compatibility.
+	// Supports both the new format (title, date, sections, summary, code) and the
+	// legacy format (section, created) for backward compatibility.
 	inTagsList := false
-	inCategoriesList := false
+	inSectionsList := false
 	for s.Scan() {
 		line := s.Text()
 		if line == "---" {
@@ -304,42 +304,42 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 			inTagsList = false
 		}
 
-		// Handle block-style categories (e.g. Hugo/Obsidian format):
-		//   categories:
+		// Handle block-style sections (e.g. Hugo/Obsidian format):
+		//   sections:
 		//     - foo
 		//     - bar
 		// Only the first item is used, same as the inline format below.
-		if inCategoriesList {
+		if inSectionsList {
 			if trimmed := strings.TrimSpace(line); strings.HasPrefix(trimmed, "- ") {
-				if c := strings.TrimSpace(trimmed[2:]); c != "" && note.Category == "" {
-					note.Category = c
+				if c := strings.TrimSpace(trimmed[2:]); c != "" && note.Section == "" {
+					note.Section = c
 				}
 				continue
 			}
-			inCategoriesList = false
+			inSectionsList = false
 		}
 
 		switch {
 		case strings.HasPrefix(line, "title: "):
 			note.Title = strings.TrimSpace(line[7:])
 
-		// New format: categories as an inline list; the first element is used as the category.
-		case strings.HasPrefix(line, "categories: "):
+		// New format: sections as an inline list; the first element is used as the section.
+		case strings.HasPrefix(line, "sections: "):
 			raw := strings.TrimSpace(strings.Trim(strings.TrimSpace(line[12:]), "[]"))
 			for _, c := range strings.Split(raw, ",") {
 				if c = strings.TrimSpace(c); c != "" {
-					note.Category = c
+					note.Section = c
 					break
 				}
 			}
 
-		// New format: categories as a block list (see inCategoriesList above).
-		case line == "categories:":
-			inCategoriesList = true
+		// New format: sections as a block list (see inSectionsList above).
+		case line == "sections:":
+			inSectionsList = true
 
-		// Legacy format: single category string.
-		case strings.HasPrefix(line, "category: "):
-			note.Category = strings.TrimSpace(line[10:])
+		// Legacy format: single section string.
+		case strings.HasPrefix(line, "section: "):
+			note.Section = strings.TrimSpace(line[10:])
 
 		case strings.HasPrefix(line, "tags: "):
 			// Inline format: tags: [foo, bar]
@@ -398,12 +398,12 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 		return nil, errors.Wrapf(err, "Cannot read note file '%s'", canonPath(path))
 	}
 
-	// Category is optional in frontmatter: derive it from the file's location
+	// Section is optional in frontmatter: derive it from the file's location
 	// relative to HomePath when absent or empty.
-	if note.Category == "" {
+	if note.Section == "" {
 		parent := filepath.Dir(path)
 		if rel, err := filepath.Rel(cfg.HomePath, parent); err == nil {
-			note.Category = filepath.ToSlash(rel)
+			note.Section = filepath.ToSlash(rel)
 		}
 	}
 
@@ -434,8 +434,8 @@ func LoadNote(path string, cfg *Config) (*Note, error) {
 	parent := filepath.Dir(path)
 	rel, err := filepath.Rel(cfg.HomePath, parent)
 	name := filepath.ToSlash(rel)
-	if err != nil || filepath.ToSlash(rel) != note.Category {
-		return note, &MismatchCategoryError{note.Category, name, path}
+	if err != nil || filepath.ToSlash(rel) != note.Section {
+		return note, &MismatchSectionError{note.Section, name, path}
 	}
 
 	return note, nil

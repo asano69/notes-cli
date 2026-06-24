@@ -47,7 +47,7 @@ $ rm "$(which notes)" # 実行ファイルを削除
 
 `notes` は、Markdown形式のメモを管理するためのサブコマンドをいくつか提供しています。
 
-* `notes new <category> <filename> [<tags>]` で新しいメモを作成します。すべてのメモは必ず1つのカテゴリに属する必要があり、タグは0個以上指定できます。
+* `notes new <section> <filename> [<tags>]` で新しいメモを作成します。すべてのメモは必ず1つのカテゴリに属する必要があり、タグは0個以上指定できます。
 * `notes ls -e` を実行すると、既存のメモをお気に入りのエディタで開くことができます。この場合、`$NOTES_CLI_EDITOR`（設定されていない場合は代替として `EDITOR`）が設定されている必要があります。
 * `notes ls -o` を実行すると、既存のメモをターミナル上で確認できます（`-o` は各メモの情報を1行で表示することを意味します）。
 
@@ -55,15 +55,15 @@ notes-cliのホームディレクトリ下のディレクトリ構造は、以�
 
 ```
 <HOME>
-├── category1
-│   ├── nested-category
+├── section1
+│   ├── nested-section
 │   │   └── note3.md
 │   ├── note1.md
 │   └── note2.md
-├── category2
+├── section2
 │   ├── note4.md
 │   └── note5.md
-└── category3
+└── section3
     └── note6.md
 
 ```
@@ -112,14 +112,14 @@ title: "Hello World!"
 summary: "Hugo is a static site generator written in Go. It converts Markdown 
   files into HTML with remarkable speed."
 tags: [golang, hugo]
-categories: [wiki]
+sections: [wiki]
 draft:
 date: 2025-06-01T09:45:01+09:00
 lastmod: 2026-06-19T17:48:41+09:00
 ---
 ```
 
-`category: ...`、`tags: ...`、`created: ...` の行、およびタイトル（`# how-to-handle-files`）は削除しないでください。これらは `notes` コマンドによって使用されます（内容を変更する分には問題ありません）。デフォルトのタイトルはファイル名になります。以下のように、メモのタイトルや本文を自由に編集できます。
+`section: ...`、`tags: ...`、`created: ...` の行、およびタイトル（`# how-to-handle-files`）は削除しないでください。これらは `notes` コマンドによって使用されます（内容を変更する分には問題ありません）。デフォルトのタイトルはファイル名になります。以下のように、メモのタイトルや本文を自由に編集できます。
 
 ```markdown
 ---
@@ -127,7 +127,7 @@ title: "Hello World!"
 summary: "Hugo is a static site generator written in Go. It converts Markdown 
   files into HTML with remarkable speed."
 tags: [golang, hugo]
-categories: [wiki]
+sections: [wiki]
 draft:
 date: 2025-06-01T09:45:01+09:00
 lastmod: 2026-06-19T17:48:41+09:00
@@ -215,7 +215,7 @@ $ notes list --full
 
 ```
 /Users/me/.local/share/notes-cli/blog/how-to-handle-files.md
-- Category: blog
+- Section: blog
 - Tags: golang, file
 - Created: 2018-10-28T07:19:27+09:00
 
@@ -231,7 +231,7 @@ GoDocがすべてを解説しています。
 このオプションでは、以下の情報が色付きで表示されます。
 
 * メモファイルへのフルパス
-* メタデータ（`Category`、`Tags`、`Created`）
+* メタデータ（`Section`、`Tags`、`Created`）
 * メモのタイトル
 * メモの本文（最大10行まで）
 
@@ -281,7 +281,7 @@ blog/how-to-handle-files.md golang,file How to handle files in Go
 ```markdown
 weekly-meeting-2018-11-07
 =========================
-- Category: minutes
+- Section: minutes
 - Tags:
 - Created: 2018-11-07T14:19:27+09:00
 
@@ -509,7 +509,7 @@ some-title
 
 Markdown 以外のすべてのリソースは `notes` コマンドによって無視されます。そのため、メモの Markdown ファイルと同じディレクトリに `.png` や `.jpg` ファイルを自由に配置できます。
 
-あるいは、`HOME/images/` や `HOME/category1/images` のように、画像専用の独立したディレクトリを使用することもできます。`grep` を使用する際、同じディレクトリ内に大量の画像とメモファイルが混在しているよりも、この方法の方が適している場合があります。
+あるいは、`HOME/images/` や `HOME/section1/images` のように、画像専用の独立したディレクトリを使用することもできます。`grep` を使用する際、同じディレクトリ内に大量の画像とメモファイルが混在しているよりも、この方法の方が適している場合があります。
 
 画像ディレクトリを他のカテゴリディレクトリと区別したい場合は、カテゴリディレクトリの名前に `.` プレフィックスを付けることができない特性を利用して、`HOME/.images` のように `.` プレフィックスを付けてください。
 
@@ -564,7 +564,7 @@ function! s:notes_new(...) abort
     if has_key(a:, 1)
         let cat = a:1
     else
-        let cat = input('category?: ')
+        let cat = input('section?: ')
     endif
     if has_key(a:, 2)
         let name = a:2

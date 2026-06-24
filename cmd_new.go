@@ -11,8 +11,8 @@ import (
 // NewCmd represents `notes new` command. Each public fields represent options of the command
 type NewCmd struct {
 	Config *Config
-	// Category is a category name of the new note. This must be a name allowed for directory name
-	Category string
+	// Section is a section name of the new note. This must be a name allowed for directory name
+	Section string
 	// Filename is a file name of the new note
 	Filename string
 	// Tags is a comma-separated string of tags of the new note
@@ -49,7 +49,7 @@ func (cmd *NewCmd) fallbackInput(note *Note) error {
 func (cmd *NewCmd) Do() error {
 	git := NewGit(cmd.Config)
 
-	note, err := NewNote(cmd.Category, cmd.Tags, cmd.Filename, "", cmd.Config)
+	note, err := NewNote(cmd.Section, cmd.Tags, cmd.Filename, "", cmd.Config)
 	if err != nil {
 		return err
 	}

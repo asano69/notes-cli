@@ -33,19 +33,19 @@ type cliOptions struct {
 	ColorAlways bool             `short:"A" help:"Enable color output always"`
 	Version     kong.VersionFlag `help:"Show version"`
 
-	New        newCommand        `cmd:"" help:"Create a new note with given category and file name"`
-	List       listCommand       `cmd:"" aliases:"ls" help:"List notes with filtering by categories and/or tags with regular expressions. By default, it shows full path of notes"`
-	Categories categoriesCommand `cmd:"" aliases:"cats" help:"List all categories to stdout"`
+	New        newCommand        `cmd:"" help:"Create a new note with given section and file name"`
+	List       listCommand       `cmd:"" aliases:"ls" help:"List notes with filtering by sections and/or tags with regular expressions. By default, it shows full path of notes"`
+	Sections sectionsCommand `cmd:"" aliases:"cats" help:"List all sections to stdout"`
 	Tags       tagsCommand       `cmd:"" help:"List all tags"`
 	TagMod     tagModCommand     `cmd:"" name:"tagmod" help:"Rename or delete a tag across all notes"`
-	TagAdd     tagAddCommand     `cmd:"" name:"tagadd" help:"Add a tag to a note file, or to all notes in a category"`
+	TagAdd     tagAddCommand     `cmd:"" name:"tagadd" help:"Add a tag to a note file, or to all notes in a section"`
 	Save       saveCommand       `cmd:"" help:"Save notes using Git. It adds all notes and creates a commit to Git repository at home directory"`
 	Config     configCommand     `cmd:"" help:"Output config values to stdout. By default output all values with KEY=VALUE style"`
 	Fix        fixCommand        `cmd:"" help:"Repair note YAML frontmatter into the format notes-cli expects"`
 }
 
 type newCommand struct {
-	Category string `arg:"" help:"Category of note. Note must belong to one category"`
+	Section string `arg:"" help:"Section of note. Note must belong to one section"`
 	Filename string `arg:"" help:"File name of note. It automatically adds '.md' file extension if omitted"`
 	Tags     string `arg:"" optional:"" help:"Comma-separated tags of note. Zero or more tags can be specified to note"`
 	NoInline bool   `name:"no-inline-input" help:"Does not request inline input even if no editor command is set to $NOTES_CLI_EDITOR"`
@@ -54,18 +54,18 @@ type newCommand struct {
 
 type listCommand struct {
 	Full     bool   `short:"f" help:"Show list of full information of note (full path, metadata, title, body (up to 10 lines)) instead of file path"`
-	Category string `short:"c" help:"Filter list by category name with regular expression"`
+	Section string `short:"c" help:"Filter list by section name with regular expression"`
 	Tag      string `short:"t" help:"Filter list by tag name with regular expression"`
 	Relative bool   `short:"r" help:"Show relative paths from $NOTES_CLI_HOME directory"`
-	Oneline  bool   `short:"o" help:"Show oneline information of note (relative path, category, tags, title) instead of file path"`
-	SortBy   string `name:"sort" short:"s" enum:"modified,created,filename,category" default:"created" help:"Sort list by 'modified', 'created', 'filename' or 'category'. Default is 'created'"`
+	Oneline  bool   `short:"o" help:"Show oneline information of note (relative path, section, tags, title) instead of file path"`
+	SortBy   string `name:"sort" short:"s" enum:"modified,created,filename,section" default:"created" help:"Sort list by 'modified', 'created', 'filename' or 'section'. Default is 'created'"`
 	Edit     bool   `short:"e" help:"Open listed notes with your favorite editor. $NOTES_CLI_EDITOR must be set. Paths of listed notes are passed to the editor command's arguments"`
 }
 
-type categoriesCommand struct{}
+type sectionsCommand struct{}
 
 type tagsCommand struct {
-	Category string `arg:"" optional:"" help:"Show tags of specified category. If not specified, all tags are output"`
+	Section string `arg:"" optional:"" help:"Show tags of specified section. If not specified, all tags are output"`
 }
 
 type tagModCommand struct {
@@ -76,7 +76,7 @@ type tagModCommand struct {
 
 type tagAddCommand struct {
 	Tag    string `arg:"" help:"Tag name to add"`
-	Target string `arg:"" help:"Path to a note file, or a category name (directory path relative to NOTES_CLI_HOME, e.g. 'animal/dog')"`
+	Target string `arg:"" help:"Path to a note file, or a section name (directory path relative to NOTES_CLI_HOME, e.g. 'animal/dog')"`
 }
 
 type saveCommand struct {
@@ -92,19 +92,19 @@ type fixCommand struct {
 }
 
 func (cmd *newCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
-	return &NewCmd{Config: c, Category: cmd.Category, Filename: cmd.Filename, Tags: cmd.Tags, NoInline: cmd.NoInline, NoEdit: cmd.NoEdit}
+	return &NewCmd{Config: c, Section: cmd.Section, Filename: cmd.Filename, Tags: cmd.Tags, NoInline: cmd.NoInline, NoEdit: cmd.NoEdit}
 }
 
 func (cmd *listCommand) runtimeCmd(c *Config, out io.Writer) Cmd {
-	return &ListCmd{Config: c, Out: out, Full: cmd.Full, Category: cmd.Category, Tag: cmd.Tag, Relative: cmd.Relative, Oneline: cmd.Oneline, SortBy: cmd.SortBy, Edit: cmd.Edit}
+	return &ListCmd{Config: c, Out: out, Full: cmd.Full, Section: cmd.Section, Tag: cmd.Tag, Relative: cmd.Relative, Oneline: cmd.Oneline, SortBy: cmd.SortBy, Edit: cmd.Edit}
 }
 
-func (cmd *categoriesCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
-	return &CategoriesCmd{Config: c, Out: os.Stdout}
+func (cmd *sectionsCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
+	return &SectionsCmd{Config: c, Out: os.Stdout}
 }
 
 func (cmd *tagsCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
-	return &TagsCmd{Config: c, Out: os.Stdout, Category: cmd.Category}
+	return &TagsCmd{Config: c, Out: os.Stdout, Section: cmd.Section}
 }
 
 func (cmd *tagModCommand) runtimeCmd(c *Config, _ io.Writer) Cmd {
@@ -146,7 +146,7 @@ func ParseCmd(args []string) (Cmd, error) {
 	//   - if there is one or more notes, show the list with `list --oneline`
 	// ref: #2
 	if len(args) == 0 {
-		if cats, err := CollectCategories(c, OnlyFirstCategory); err == nil && len(cats) > 0 {
+		if cats, err := CollectSections(c, OnlyFirstSection); err == nil && len(cats) > 0 {
 			return &ListCmd{
 				Config:  c,
 				Out:     colorStdout,

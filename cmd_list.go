@@ -26,8 +26,8 @@ type ListCmd struct {
 	Config *Config
 	// Full is a flag equivalent to --full
 	Full bool
-	// Category is a regex string equivalent to --category
-	Category string
+	// Section is a regex string equivalent to --section
+	Section string
 	// Tag is a regex string equivalent to --tag
 	Tag string
 	// Relative is a flag equivalent to --relative
@@ -44,8 +44,8 @@ type ListCmd struct {
 
 func (cmd *ListCmd) printNoteFullTo(out *bufio.Writer, note *Note) {
 	green.Fprintln(out, note.FilePath())
-	yellow.Fprint(out, "Category: ")
-	fmt.Fprintln(out, note.Category)
+	yellow.Fprint(out, "Section: ")
+	fmt.Fprintln(out, note.Section)
 	yellow.Fprint(out, "Tags:     ")
 	fmt.Fprintln(out, strings.Join(note.Tags, ", "))
 	yellow.Fprint(out, "Created:  ")
@@ -99,8 +99,8 @@ func (cmd *ListCmd) printNotes(notes []*Note) error {
 	switch strings.ToLower(cmd.SortBy) {
 	case "filename":
 		sortByFilename(notes)
-	case "category":
-		sortByCategory(notes)
+	case "section":
+		sortBySection(notes)
 	case "modified":
 		if err := sortByModified(notes); err != nil {
 			return err
@@ -148,15 +148,15 @@ func (cmd *ListCmd) printNotes(notes []*Note) error {
 
 // Do runs `notes list` command and returns an error if occurs
 func (cmd *ListCmd) Do() error {
-	cats, err := CollectCategories(cmd.Config, 0)
+	cats, err := CollectSections(cmd.Config, 0)
 	if err != nil {
 		return err
 	}
 
 	var catReg *regexp.Regexp
-	if cmd.Category != "" {
-		if catReg, err = regexp.Compile(cmd.Category); err != nil {
-			return errors.Wrap(err, "Regular expression for filtering categories is invalid")
+	if cmd.Section != "" {
+		if catReg, err = regexp.Compile(cmd.Section); err != nil {
+			return errors.Wrap(err, "Regular expression for filtering sections is invalid")
 		}
 	}
 

@@ -50,7 +50,7 @@ func (cmd *TagModCmd) Do() error {
 		return errors.Errorf("Deleting tag '%s' requires --force. Run 'notes tagmod %s --force' to delete it", cmd.From, cmd.From)
 	}
 
-	cats, err := CollectCategories(cmd.Config, 0)
+	cats, err := CollectSections(cmd.Config, 0)
 	if err != nil {
 		return err
 	}

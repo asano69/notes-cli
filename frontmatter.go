@@ -35,8 +35,8 @@ type frontmatterField struct {
 // is rendered. note.Create() (writing a brand-new note) and FixCmd (repairing
 // an existing note) both build their output from this table.
 //
-// "category" (legacy singular) and "categories" (plural) are intentionally
-// absent: category is always derivable from the file's location relative to
+// "section" (legacy singular) and "sections" (plural) are intentionally
+// absent: section is always derivable from the file's location relative to
 // NOTES_CLI_HOME. FixCmd suppresses both keys explicitly so they are removed
 // from existing notes on the next fix run.
 var frontmatterSchema = []frontmatterField{
