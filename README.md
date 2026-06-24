@@ -112,7 +112,6 @@ title: "Hello World!"
 summary: "Hugo is a static site generator written in Go. It converts Markdown 
   files into HTML with remarkable speed."
 tags: [golang, hugo]
-sections: [wiki]
 draft:
 date: 2025-06-01T09:45:01+09:00
 lastmod: 2026-06-19T17:48:41+09:00
@@ -127,7 +126,6 @@ title: "Hello World!"
 summary: "Hugo is a static site generator written in Go. It converts Markdown 
   files into HTML with remarkable speed."
 tags: [golang, hugo]
-sections: [wiki]
 draft:
 date: 2025-06-01T09:45:01+09:00
 lastmod: 2026-06-19T17:48:41+09:00
