@@ -107,7 +107,7 @@ func (note *Note) Create() error {
 		map[string]string{
 			"title":   title,
 			"summary": "",
-			"draft":   "",
+			"draft":   "true",
 			"date":    note.Created.Format(time.RFC3339),
 			"lastmod": "",
 		},
@@ -141,7 +141,6 @@ func (note *Note) Create() error {
 	_, err = f.Write(b.Bytes())
 	return err
 }
-
 
 // Open opens the note using an editor command user set. When user did not set any editor command
 // with $NOTES_CLI_EDITOR, this method fails. Otherwise, an editor process is spawned with argument
